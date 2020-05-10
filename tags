@@ -1,0 +1,741 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+ACTIVE_POWER_DOWN	memory_controller.h	/^  IDLE, PRECHARGING, REFRESHING, ROW_ACTIVE, PRECHARGE_POWER_DOWN_FAST, PRECHARGE_POWER_DOWN_SLOW, ACTIVE_POWER_DOWN$/;"	e	enum:__anon4
+ACT_CMD	memory_controller.h	/^typedef enum {ACT_CMD, COL_READ_CMD, PRE_CMD, COL_WRITE_CMD, PWR_DN_SLOW_CMD, PWR_DN_FAST_CMD, PWR_UP_CMD, REF_CMD, NOP} command_t; $/;"	e	enum:__anon2
+ADDRESS_BITS	params.h	/^int ADDRESS_BITS ;\/\/ 32;$/;"	v
+ADDRESS_MAPPING	params.h	/^int ADDRESS_MAPPING ;\/\/ 1;$/;"	v
+ADDRINT	utils.h	12;"	d
+ASSERTM	global_types.h	14;"	d
+Addr	global_types.h	/^typedef uns64		    Addr;$/;"	t
+Addr_t	utils.h	15;"	d
+BIGNUM	main.c	/^long long int BIGNUM = 1000000;$/;"	v
+BIGNUM	main_bk.c	/^long long int BIGNUM = 1000000;$/;"	v
+BIG_ACTIVATION_WINDOW	memory_controller.c	23;"	d	file:
+BINDIR	Makefile	/^BINDIR = ..\/bin$/;"	m
+BITVECTOR	utils.h	14;"	d
+Binary	global_types.h	/^typedef uns32		    Binary;$/;"	t
+CACHE_LINE_SIZE	params.h	/^int CACHE_LINE_SIZE ;\/\/ 64;$/;"	v
+CACHE_REPL	params.h	/^int CACHE_REPL; \/\/ 0 by default for LRU$/;"	v
+CACHE_SIZE	params.h	/^int CACHE_SIZE; \/\/ 4 MB$/;"	v
+CACHE_WAYS	params.h	/^int CACHE_WAYS; \/\/ 8 Ways$/;"	v
+CC	Makefile	/^CC = gcc$/;"	m
+CDL_DELETE	utlist.h	488;"	d
+CDL_FOREACH	utlist.h	499;"	d
+CDL_FOREACH_SAFE	utlist.h	502;"	d
+CDL_PREPEND	utlist.h	474;"	d
+CDL_SEARCH	utlist.h	514;"	d
+CDL_SEARCH_SCALAR	utlist.h	507;"	d
+CDL_SORT	utlist.h	216;"	d
+CFLAGS	Makefile	/^CFLAGS = -Wall -c $(DEBUG) $/;"	m
+CLOCK_INC_FACTOR	global_types.h	10;"	d
+COL_READ_CMD	memory_controller.h	/^typedef enum {ACT_CMD, COL_READ_CMD, PRE_CMD, COL_WRITE_CMD, PWR_DN_SLOW_CMD, PWR_DN_FAST_CMD, PWR_UP_CMD, REF_CMD, NOP} command_t; $/;"	e	enum:__anon2
+COL_WRITE_CMD	memory_controller.h	/^typedef enum {ACT_CMD, COL_READ_CMD, PRE_CMD, COL_WRITE_CMD, PWR_DN_SLOW_CMD, PWR_DN_FAST_CMD, PWR_UP_CMD, REF_CMD, NOP} command_t; $/;"	e	enum:__anon2
+COMPRESSION_ENABLED	params.h	/^int COMPRESSION_ENABLED; \/\/ 0 by default (not enabled)$/;"	v
+COMPRESSION_MODE	params.h	/^int COMPRESSION_MODE; \/\/ 0 by default (no mode)$/;"	v
+COUNTER	utils.h	13;"	d
+CR	configfile.h	8;"	d
+CRC_CeilLog2	utils.h	/^static inline INT32 CRC_CeilLog2(UINT32 n)$/;"	f
+CRC_FloorLog2	utils.h	/^static inline INT32 CRC_FloorLog2(UINT32 n)$/;"	f
+CYCLE_VAL	main.c	/^long long int CYCLE_VAL=0;$/;"	v
+CYCLE_VAL	main_bk.c	/^long long int CYCLE_VAL=0;$/;"	v
+Counter	global_types.h	/^typedef uns64               Counter;$/;"	t
+DBGMSG	global_types.h	15;"	d
+DEBUG	Makefile	/^DEBUG = -O3 -g$/;"	m
+DECOMPRESSION_LATENCY	main.c	19;"	d	file:
+DL_APPEND	utlist.h	412;"	d
+DL_CONCAT	utlist.h	373;"	d
+DL_CONCAT	utlist.h	426;"	d
+DL_DELETE	utlist.h	441;"	d
+DL_FOREACH	utlist.h	460;"	d
+DL_FOREACH_SAFE	utlist.h	464;"	d
+DL_PREPEND	utlist.h	400;"	d
+DL_SEARCH	utlist.h	469;"	d
+DL_SEARCH_SCALAR	utlist.h	468;"	d
+DL_SORT	utlist.h	158;"	d
+DRAM_CLK_FREQUENCY	params.h	/^int DRAM_CLK_FREQUENCY ;\/\/ 800;$/;"	v
+EOL	configfile.h	7;"	d
+FALSE	cache.h	12;"	d
+FALSE	cache.h.bk.h	12;"	d
+FALSE	global_types.h	3;"	d
+FASTMEM_ENABLED	params.h	/^int FASTMEM_ENABLED; \/\/this option is for testing. memory latency is 1 $/;"	v
+Flag	global_types.h	/^typedef uns8		    Flag;$/;"	t
+Generic_Enum	global_types.h	/^typedef int		    Generic_Enum;$/;"	t
+HASH_INDEX	hash_lib.c	9;"	d	file:
+HIT	cache.h	15;"	d
+HIT	cache.h.bk.h	15;"	d
+HIT	global_types.h	6;"	d
+HI_WM	scheduler-fcfs.c	17;"	d	file:
+HI_WM	scheduler.c	37;"	d	file:
+Hash_Table	hash_lib.h	/^} Hash_Table;$/;"	t	typeref:struct:Hash_Table_struct
+Hash_Table_Entry	hash_lib.h	/^} Hash_Table_Entry;$/;"	t	typeref:struct:Hash_Table_Entry_struct
+Hash_Table_Entry_struct	hash_lib.h	/^typedef struct Hash_Table_Entry_struct {$/;"	s
+Hash_Table_struct	hash_lib.h	/^typedef struct Hash_Table_struct {$/;"	s
+IDD0	params.h	/^float IDD0;$/;"	v
+IDD1	params.h	/^float IDD1;$/;"	v
+IDD2N	params.h	/^float IDD2N;$/;"	v
+IDD2P0	params.h	/^float IDD2P0;$/;"	v
+IDD2P1	params.h	/^float IDD2P1;$/;"	v
+IDD3N	params.h	/^float IDD3N;$/;"	v
+IDD3P	params.h	/^float IDD3P;$/;"	v
+IDD4R	params.h	/^float IDD4R;$/;"	v
+IDD4W	params.h	/^float IDD4W;$/;"	v
+IDD5	params.h	/^float IDD5;$/;"	v
+IDEAL_COMPRESSOR_ENABLED	params.h	/^int IDEAL_COMPRESSOR_ENABLED; \/\/0 $/;"	v
+IDLE	memory_controller.h	/^  IDLE, PRECHARGING, REFRESHING, ROW_ACTIVE, PRECHARGE_POWER_DOWN_FAST, PRECHARGE_POWER_DOWN_SLOW, ACTIVE_POWER_DOWN$/;"	e	enum:__anon4
+INT32	utils.h	11;"	d
+InvPageTable	os.h	/^struct InvPageTable{$/;"	s
+InvPageTable	os.h	/^typedef struct InvPageTable      InvPageTable;$/;"	t	typeref:struct:InvPageTable
+InvPageTableEntry	os.h	/^struct InvPageTableEntry{$/;"	s
+InvPageTableEntry	os.h	/^typedef struct InvPageTableEntry InvPageTableEntry;$/;"	t	typeref:struct:InvPageTableEntry
+L3Cache	main_bk.c	/^LLCache *L3Cache[4];$/;"	v
+L3_LATENCY	main.c	17;"	d	file:
+L3_LATENCY	main_bk.c	16;"	d	file:
+LAT_6EC7ED	main_bk.c	/^int LAT_6EC7ED;$/;"	v
+LDECLTYPE	utlist.h	68;"	d
+LDECLTYPE	utlist.h	71;"	d
+LDECLTYPE	utlist.h	74;"	d
+LFLAGS	Makefile	/^LFLAGS = -Wall $(DEBUG) -lm$/;"	m
+LL_APPEND	utlist.h	307;"	d
+LL_APPEND	utlist.h	368;"	d
+LL_APPEND	utlist.h	369;"	d
+LL_APPEND_VS2008	utlist.h	337;"	d
+LL_CONCAT	utlist.h	295;"	d
+LL_CONCAT	utlist.h	372;"	d
+LL_DELETE	utlist.h	320;"	d
+LL_DELETE	utlist.h	370;"	d
+LL_DELETE	utlist.h	371;"	d
+LL_DELETE_VS2008	utlist.h	349;"	d
+LL_FOREACH	utlist.h	377;"	d
+LL_FOREACH_SAFE	utlist.h	380;"	d
+LL_PREPEND	utlist.h	289;"	d
+LL_SEARCH	utlist.h	390;"	d
+LL_SEARCH_SCALAR	utlist.h	383;"	d
+LL_SORT	utlist.h	102;"	d
+LO_WM	scheduler-fcfs.c	20;"	d	file:
+LO_WM	scheduler.c	40;"	d	file:
+MAXTRACELINESIZE	main.c	21;"	d	file:
+MAXTRACELINESIZE	main_bk.c	18;"	d	file:
+MAX_BLOCKS_PER_LINE	params.h	/^int MAX_BLOCKS_PER_LINE; \/\/ 4 compressed blocks by default$/;"	v
+MAX_FETCH	params.h	/^int MAX_FETCH ;\/\/ 4;$/;"	v
+MAX_INST	params.h	/^unsigned long long MAX_INST; \/\/ 4 Billion by default$/;"	v
+MAX_NUM_BANKS	memory_controller.h	6;"	d
+MAX_NUM_CHANNELS	memory_controller.h	4;"	d
+MAX_NUM_RANKS	memory_controller.h	5;"	d
+MAX_RETIRE	params.h	/^int MAX_RETIRE ;\/\/ 2;$/;"	v
+MAX_SMALLOC	malloc_lib.c	8;"	d	file:
+MAX_TABLE_LEN	main.c	24;"	d	file:
+MAX_TABLE_LEN	main_bk.c	20;"	d	file:
+MAX_UNS	global_types.h	12;"	d
+MCACHE_LEADER_SETS	cache.h	21;"	d
+MCACHE_LEADER_SETS	cache.h.bk.h	21;"	d
+MCACHE_PSEL_MAX	cache.h	20;"	d
+MCACHE_PSEL_MAX	cache.h.bk.h	20;"	d
+MCACHE_SRRIP_INIT	cache.h	19;"	d
+MCACHE_SRRIP_INIT	cache.h.bk.h	19;"	d
+MCACHE_SRRIP_MAX	cache.h	18;"	d
+MCACHE_SRRIP_MAX	cache.h.bk.h	18;"	d
+MCache	cache.h	/^typedef struct MCache {$/;"	s
+MCache	cache.h	/^} MCache;$/;"	t	typeref:struct:MCache
+MCache	cache.h.bk.h	/^typedef struct MCache {$/;"	s
+MCache	cache.h.bk.h	/^} MCache;$/;"	t	typeref:struct:MCache
+MCache_Entry	cache.h	/^typedef struct MCache_Entry {$/;"	s
+MCache_Entry	cache.h	/^} MCache_Entry;$/;"	t	typeref:struct:MCache_Entry
+MCache_Entry	cache.h.bk.h	/^typedef struct MCache_Entry {$/;"	s
+MCache_Entry	cache.h.bk.h	/^} MCache_Entry;$/;"	t	typeref:struct:MCache_Entry
+MCache_ReplPolicy	cache.h	/^} MCache_ReplPolicy;$/;"	t	typeref:enum:MCache_ReplPolicy_Enum
+MCache_ReplPolicy	cache.h.bk.h	/^} MCache_ReplPolicy;$/;"	t	typeref:enum:MCache_ReplPolicy_Enum
+MCache_ReplPolicy_Enum	cache.h	/^typedef enum MCache_ReplPolicy_Enum {$/;"	g
+MCache_ReplPolicy_Enum	cache.h.bk.h	/^typedef enum MCache_ReplPolicy_Enum {$/;"	g
+MISS	cache.h	16;"	d
+MISS	cache.h.bk.h	16;"	d
+MISS	global_types.h	7;"	d
+NOP	memory_controller.h	/^typedef enum {ACT_CMD, COL_READ_CMD, PRE_CMD, COL_WRITE_CMD, PWR_DN_SLOW_CMD, PWR_DN_FAST_CMD, PWR_UP_CMD, REF_CMD, NOP} command_t; $/;"	e	enum:__anon2
+NO_DECLTYPE	utlist.h	70;"	d
+NUMCORES	params.h	/^int NUMCORES;$/;"	v
+NUM_BANKS	params.h	/^int NUM_BANKS ;\/\/ 8;$/;"	v
+NUM_CHANNELS	params.h	/^int NUM_CHANNELS ;\/\/ 1;$/;"	v
+NUM_COLUMNS	params.h	/^int NUM_COLUMNS ;\/\/ 128;$/;"	v
+NUM_RANKS	params.h	/^int NUM_RANKS ;\/\/ 2;$/;"	v
+NUM_REPL_POLICY	cache.h	/^    NUM_REPL_POLICY = 6$/;"	e	enum:MCache_ReplPolicy_Enum
+NUM_REPL_POLICY	cache.h.bk.h	/^    NUM_REPL_POLICY = 6$/;"	e	enum:MCache_ReplPolicy_Enum
+NUM_ROWS	params.h	/^int NUM_ROWS ;\/\/ 32768;$/;"	v
+OBJDIR	Makefile	/^OBJDIR = ..\/obj$/;"	m
+OBJS	Makefile	/^OBJS = $(OBJDIR)\/main.o $(OBJDIR)\/malloc_lib.o $(OBJDIR)\/hash_lib.o $(OBJDIR)\/os.o $(OBJDIR)\/memory_controller.o $(OBJDIR)\/scheduler.o $(OBJDIR)\/cache.o$/;"	m
+OS	os.h	/^struct OS {$/;"	s
+OS	os.h	/^typedef struct OS                OS;$/;"	t	typeref:struct:OS
+OS_H	os.h	2;"	d
+OS_MAX_THREADS	os.h	7;"	d
+OS_NUM_RND_TRIES	params.h	/^unsigned long long OS_NUM_RND_TRIES;$/;"	v
+OS_PAGESIZE	params.h	/^unsigned long long OS_PAGESIZE;$/;"	v
+OUT	Makefile	/^OUT = usimm$/;"	m
+PIPELINEDEPTH	params.h	/^int PIPELINEDEPTH ;\/\/ 5;$/;"	v
+PRECHARGE_POWER_DOWN_FAST	memory_controller.h	/^  IDLE, PRECHARGING, REFRESHING, ROW_ACTIVE, PRECHARGE_POWER_DOWN_FAST, PRECHARGE_POWER_DOWN_SLOW, ACTIVE_POWER_DOWN$/;"	e	enum:__anon4
+PRECHARGE_POWER_DOWN_SLOW	memory_controller.h	/^  IDLE, PRECHARGING, REFRESHING, ROW_ACTIVE, PRECHARGE_POWER_DOWN_FAST, PRECHARGE_POWER_DOWN_SLOW, ACTIVE_POWER_DOWN$/;"	e	enum:__anon4
+PRECHARGING	memory_controller.h	/^  IDLE, PRECHARGING, REFRESHING, ROW_ACTIVE, PRECHARGE_POWER_DOWN_FAST, PRECHARGE_POWER_DOWN_SLOW, ACTIVE_POWER_DOWN$/;"	e	enum:__anon4
+PRE_CMD	memory_controller.h	/^typedef enum {ACT_CMD, COL_READ_CMD, PRE_CMD, COL_WRITE_CMD, PWR_DN_SLOW_CMD, PWR_DN_FAST_CMD, PWR_UP_CMD, REF_CMD, NOP} command_t; $/;"	e	enum:__anon2
+PROCESSOR_CLK_MULTIPLIER	params.h	/^int PROCESSOR_CLK_MULTIPLIER;$/;"	v
+PWR_DN_FAST_CMD	memory_controller.h	/^typedef enum {ACT_CMD, COL_READ_CMD, PRE_CMD, COL_WRITE_CMD, PWR_DN_SLOW_CMD, PWR_DN_FAST_CMD, PWR_UP_CMD, REF_CMD, NOP} command_t; $/;"	e	enum:__anon2
+PWR_DN_SLOW_CMD	memory_controller.h	/^typedef enum {ACT_CMD, COL_READ_CMD, PRE_CMD, COL_WRITE_CMD, PWR_DN_SLOW_CMD, PWR_DN_FAST_CMD, PWR_UP_CMD, REF_CMD, NOP} command_t; $/;"	e	enum:__anon2
+PWR_UP_CMD	memory_controller.h	/^typedef enum {ACT_CMD, COL_READ_CMD, PRE_CMD, COL_WRITE_CMD, PWR_DN_SLOW_CMD, PWR_DN_FAST_CMD, PWR_UP_CMD, REF_CMD, NOP} command_t; $/;"	e	enum:__anon2
+PageTable	os.h	/^struct PageTable{$/;"	s
+PageTable	os.h	/^typedef struct PageTable         PageTable;$/;"	t	typeref:struct:PageTable
+PageTableEntry	os.h	/^struct PageTableEntry{$/;"	s
+PageTableEntry	os.h	/^typedef struct PageTableEntry    PageTableEntry;$/;"	t	typeref:struct:PageTableEntry
+RANDOM_TABLE_ENABLE	main_bk.c	22;"	d	file:
+READ	memory_controller.h	/^typedef enum {READ, WRITE} optype_t;$/;"	e	enum:__anon3
+REFRESHING	memory_controller.h	/^  IDLE, PRECHARGING, REFRESHING, ROW_ACTIVE, PRECHARGE_POWER_DOWN_FAST, PRECHARGE_POWER_DOWN_SLOW, ACTIVE_POWER_DOWN$/;"	e	enum:__anon4
+REF_CMD	memory_controller.h	/^typedef enum {ACT_CMD, COL_READ_CMD, PRE_CMD, COL_WRITE_CMD, PWR_DN_SLOW_CMD, PWR_DN_FAST_CMD, PWR_UP_CMD, REF_CMD, NOP} command_t; $/;"	e	enum:__anon2
+REPL_DIP	cache.h	/^    REPL_DIP = 5,$/;"	e	enum:MCache_ReplPolicy_Enum
+REPL_DIP	cache.h.bk.h	/^    REPL_DIP = 5,$/;"	e	enum:MCache_ReplPolicy_Enum
+REPL_DRRIP	cache.h	/^    REPL_DRRIP = 3,$/;"	e	enum:MCache_ReplPolicy_Enum
+REPL_DRRIP	cache.h.bk.h	/^    REPL_DRRIP = 3,$/;"	e	enum:MCache_ReplPolicy_Enum
+REPL_FIFO	cache.h	/^    REPL_FIFO = 4,$/;"	e	enum:MCache_ReplPolicy_Enum
+REPL_FIFO	cache.h.bk.h	/^    REPL_FIFO = 4,$/;"	e	enum:MCache_ReplPolicy_Enum
+REPL_LRU	cache.h	/^    REPL_LRU = 0,$/;"	e	enum:MCache_ReplPolicy_Enum
+REPL_LRU	cache.h.bk.h	/^    REPL_LRU = 0,$/;"	e	enum:MCache_ReplPolicy_Enum
+REPL_RND	cache.h	/^    REPL_RND = 1,$/;"	e	enum:MCache_ReplPolicy_Enum
+REPL_RND	cache.h.bk.h	/^    REPL_RND = 1,$/;"	e	enum:MCache_ReplPolicy_Enum
+REPL_SRRIP	cache.h	/^    REPL_SRRIP = 2,$/;"	e	enum:MCache_ReplPolicy_Enum
+REPL_SRRIP	cache.h.bk.h	/^    REPL_SRRIP = 2,$/;"	e	enum:MCache_ReplPolicy_Enum
+ROB	main.c	/^struct robstructure *ROB;$/;"	v	typeref:struct:robstructure
+ROB	main_bk.c	/^struct robstructure *ROB;$/;"	v	typeref:struct:robstructure
+ROBSIZE	params.h	/^int ROBSIZE ;\/\/ 128;$/;"	v
+ROW_ACTIVE	memory_controller.h	/^  IDLE, PRECHARGING, REFRESHING, ROW_ACTIVE, PRECHARGE_POWER_DOWN_FAST, PRECHARGE_POWER_DOWN_SLOW, ACTIVE_POWER_DOWN$/;"	e	enum:__anon4
+RQ_LOOKUP_LATENCY	memory_controller.c	315;"	d	file:
+SAT_DEC	global_types.h	18;"	d
+SAT_INC	global_types.h	17;"	d
+SCHEDELUR_DEBUG_MSG	utils.h	51;"	d
+SCHEDULER_DEBUG	utils.h	49;"	d
+SCHEDULER_DEBUG_MSG	utils.h	53;"	d
+SCounter	global_types.h	/^typedef int64               SCounter;$/;"	t
+SMALLOC_BLOCK	malloc_lib.c	10;"	d	file:
+SMalloc_Entry	malloc_lib.h	/^} SMalloc_Entry;$/;"	t	typeref:struct:SMalloc_Entry_struct
+SMalloc_Entry_struct	malloc_lib.h	/^typedef struct SMalloc_Entry_struct{$/;"	s
+SMalloc_Raw	malloc_lib.h	/^} SMalloc_Raw;$/;"	t	typeref:struct:SMalloc_Raw_struct
+SMalloc_Raw_struct	malloc_lib.h	/^typedef struct SMalloc_Raw_struct{$/;"	s
+SPACE	configfile.h	9;"	d
+SRC_CACHE_HPP	cache.h	6;"	d
+SRC_CACHE_HPP	cache.h.bk.h	6;"	d
+TAB	configfile.h	10;"	d
+TRUE	cache.h	13;"	d
+TRUE	cache.h.bk.h	13;"	d
+TRUE	global_types.h	4;"	d
+T_CAS	params.h	/^int T_CAS ;\/\/ 44;$/;"	v
+T_CCD	params.h	/^int T_CCD ;\/\/ 16;$/;"	v
+T_CKE	params.h	/^int T_CKE ;\/\/ 16;$/;"	v
+T_CWD	params.h	/^int T_CWD ;\/\/ 20;$/;"	v
+T_DATA_TRANS	params.h	/^int T_DATA_TRANS ;\/\/ 16;$/;"	v
+T_FAW	params.h	/^int T_FAW ;\/\/ 128;$/;"	v
+T_PD_MIN	params.h	/^int T_PD_MIN ;\/\/ 16;$/;"	v
+T_RAS	params.h	/^int T_RAS ;\/\/ 112;$/;"	v
+T_RC	params.h	/^int T_RC ;\/\/ 156;$/;"	v
+T_RCD	params.h	/^int T_RCD ;\/\/ 44;$/;"	v
+T_REFI	params.h	/^int T_REFI;$/;"	v
+T_RFC	params.h	/^int T_RFC;$/;"	v
+T_RP	params.h	/^int T_RP ;\/\/ 44;$/;"	v
+T_RRD	params.h	/^int T_RRD ;\/\/ 20;$/;"	v
+T_RTP	params.h	/^int T_RTP ;\/\/ 24;$/;"	v
+T_RTRS	params.h	/^int T_RTRS ;\/\/ 8;$/;"	v
+T_WR	params.h	/^int T_WR ;\/\/ 48;$/;"	v
+T_WTR	params.h	/^int T_WTR ;\/\/ 24;$/;"	v
+T_XP	params.h	/^int T_XP ;\/\/ 20;$/;"	v
+T_XP_DLL	params.h	/^int T_XP_DLL ;\/\/ 40;$/;"	v
+UINT32	utils.h	10;"	d
+USE_PHY_ADDR	main_bk.c	24;"	d	file:
+UTLIST_H	utlist.h	25;"	d
+UTLIST_VERSION	utlist.h	27;"	d
+UT_MEM_DEBUG	utils.h	43;"	d
+UT_MEM_DEBUG	utils.h	45;"	d
+VDD	params.h	/^float VDD;$/;"	v
+VirtualPhysicalPair	os.h	/^struct VirtualPhysicalPair{$/;"	s
+VirtualPhysicalPair	os.h	/^typedef struct VirtualPhysicalPair VirtualPhysicalPair;$/;"	t	typeref:struct:VirtualPhysicalPair
+WQ_CAPACITY	params.h	/^int WQ_CAPACITY ;\/\/ 64;$/;"	v
+WQ_LOOKUP_LATENCY	params.h	/^int WQ_LOOKUP_LATENCY;$/;"	v
+WRAPPER_BLOCK	malloc_lib.c	9;"	d	file:
+WRITE	memory_controller.h	/^typedef enum {READ, WRITE} optype_t;$/;"	e	enum:__anon3
+_CASTASGN	utlist.h	87;"	d
+_CASTASGN	utlist.h	95;"	d
+_NEXT	utlist.h	82;"	d
+_NEXT	utlist.h	90;"	d
+_NEXTASGN	utlist.h	83;"	d
+_NEXTASGN	utlist.h	91;"	d
+_PREV	utlist.h	84;"	d
+_PREV	utlist.h	92;"	d
+_PREVASGN	utlist.h	85;"	d
+_PREVASGN	utlist.h	93;"	d
+_RS	utlist.h	86;"	d
+_RS	utlist.h	94;"	d
+_SV	utlist.h	81;"	d
+_SV	utlist.h	89;"	d
+__CONFIG_FILE_IN_H__	configfile.h	3;"	d
+__GLOBAL_TYPES_H__	global_types.h	46;"	d
+__HASH_LIB_H__	hash_lib.h	37;"	d
+__MALLOC_LIB_H__	malloc_lib.h	17;"	d
+__MEMORY_CONTROLLER_H__	memory_controller.h	2;"	d
+__PARAMS_H__	params.h	2;"	d
+__PROCESSOR_H__	processor.h	2;"	d
+__RANDOMIZE_H__	randomize.h	2;"	d
+__SCHEDULER_H__	scheduler-fcfs.h	2;"	d
+__SCHEDULER_H__	scheduler.h	2;"	d
+__UTILS_H__	utils.h	2;"	d
+activation_record	memory_controller.c	/^int activation_record[MAX_NUM_CHANNELS][MAX_NUM_RANKS][BIG_ACTIVATION_WINDOW];$/;"	v
+active_row	memory_controller.h	/^  long long int active_row;$/;"	m	struct:bnk
+actual_address	memory_controller.h	/^  long long int actual_address; \/\/ physical_address being accessed$/;"	m	struct:draddr
+addr	main.c	/^    long long int addr;$/;"	m	struct:element	file:
+addr_rand_init	main_bk.c	/^int addr_rand_init(int numcores)$/;"	f
+addr_randomize	main_bk.c	/^int addr_randomize(long long int *addr, int numc)$/;"	f
+address_bits_token	configfile.h	/^    address_bits_token,$/;"	e	enum:__anon1
+address_mapping_token	configfile.h	/^    address_mapping_token,$/;"	e	enum:__anon1
+arrival_time	memory_controller.h	/^  long long int arrival_time;     $/;"	m	struct:req
+assocs	cache.h	/^    uns assocs;$/;"	m	struct:MCache
+assocs	cache.h.bk.h	/^    uns assocs;$/;"	m	struct:MCache
+average_gap_between_activates	memory_controller.h	/^double average_gap_between_activates[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+average_gap_between_refreshes	memory_controller.h	/^double average_gap_between_refreshes[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+bank	memory_controller.h	/^  int bank;	\/\/ bank id$/;"	m	struct:draddr
+bank_t	memory_controller.h	/^}bank_t;$/;"	t	typeref:struct:bnk
+bankstate_t	memory_controller.h	/^} bankstate_t;$/;"	t	typeref:enum:__anon4
+block_cnt	cache.h	/^    uns block_cnt[4];$/;"	m	struct:MCache_Entry
+block_cnt	cache.h.bk.h	/^    uns block_cnt[4];$/;"	m	struct:MCache_Entry
+block_dirty	cache.h	/^    uns block_dirty[4]; \/\/dirty bit for blocks$/;"	m	struct:MCache_Entry
+block_dirty	cache.h.bk.h	/^    uns block_dirty[4]; \/\/dirty bit for blocks$/;"	m	struct:MCache_Entry
+block_overwritten	cache.h	/^    uns block_overwritten[4];$/;"	m	struct:MCache_Entry
+block_overwritten	cache.h.bk.h	/^    uns block_overwritten[4];$/;"	m	struct:MCache_Entry
+block_queue	cache.h	/^    uns block_queue[4];$/;"	m	struct:MCache_Entry
+block_valid	cache.h	/^    uns block_valid[4]; \/\/block id used in YACC$/;"	m	struct:MCache_Entry
+block_valid	cache.h.bk.h	/^    uns block_valid[4]; \/\/block id used in YACC$/;"	m	struct:MCache_Entry
+bnk	memory_controller.h	/^typedef struct bnk$/;"	s
+buckets	hash_lib.h	/^    uns   buckets;$/;"	m	struct:Hash_Table_struct
+cache_line_size_token	configfile.h	/^    cache_line_size_token,$/;"	e	enum:__anon1
+cacherepl_token	configfile.h	/^    cacherepl_token,$/;"	e	enum:__anon1
+cachesize_token	configfile.h	/^    cachesize_token,$/;"	e	enum:__anon1
+cacheways_token	configfile.h	/^    cacheways_token,$/;"	e	enum:__anon1
+calc_dram_addr	memory_controller.c	/^dram_address_t * calc_dram_addr(long long int physical_address)$/;"	f
+calculate_power	memory_controller.c	/^ float calculate_power(int channel, int rank, int print_stats_type, int chips_per_rank)$/;"	f
+cas_issued_current_cycle	memory_controller.h	/^long long int cas_issued_current_cycle[MAX_NUM_CHANNELS][MAX_NUM_RANKS][MAX_NUM_BANKS]; \/\/ 1\/2 for COL_READ\/COL_WRITE$/;"	v
+channel	memory_controller.h	/^  int channel;	\/\/ channel id$/;"	m	struct:draddr
+clean_queues	memory_controller.c	/^void clean_queues(int channel)$/;"	f
+cmd_all_bank_precharge_issuable	memory_controller.h	/^long long int cmd_all_bank_precharge_issuable[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+cmd_powerdown_fast_issuable	memory_controller.h	/^long long int cmd_powerdown_fast_issuable[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+cmd_powerdown_slow_issuable	memory_controller.h	/^long long int cmd_powerdown_slow_issuable[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+cmd_powerup_issuable	memory_controller.h	/^long long int cmd_powerup_issuable[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+cmd_precharge_issuable	memory_controller.h	/^long long int cmd_precharge_issuable[MAX_NUM_CHANNELS][MAX_NUM_RANKS][MAX_NUM_BANKS];$/;"	v
+cmd_refresh_issuable	memory_controller.h	/^long long int cmd_refresh_issuable[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+column	memory_controller.h	/^  int column;	\/\/ column id$/;"	m	struct:draddr
+command_issuable	memory_controller.h	/^  int command_issuable; \/\/ can this request be issued in the current cycle$/;"	m	struct:req
+command_issued_current_cycle	memory_controller.h	/^long long int command_issued_current_cycle[MAX_NUM_CHANNELS];$/;"	v
+command_t	memory_controller.h	/^typedef enum {ACT_CMD, COL_READ_CMD, PRE_CMD, COL_WRITE_CMD, PWR_DN_SLOW_CMD, PWR_DN_FAST_CMD, PWR_UP_CMD, REF_CMD, NOP} command_t; $/;"	t	typeref:enum:__anon2
+comment_token	configfile.h	/^    comment_token,$/;"	e	enum:__anon1
+committed	memory_controller.h	/^long long int *committed; \/\/ total committed instructions in each core$/;"	v
+completion_time	memory_controller.h	/^  long long int completion_time; \/\/final completion time$/;"	m	struct:req
+compression_16	cache.h	/^    uns64 compression_16;$/;"	m	struct:MCache
+compression_32	cache.h	/^    uns64 compression_32;$/;"	m	struct:MCache
+compression_48	cache.h	/^    uns64 compression_48;$/;"	m	struct:MCache
+compression_64	cache.h	/^    uns64 compression_64;$/;"	m	struct:MCache
+compression_accesses	cache.h	/^    uns64 compression_accesses;$/;"	m	struct:MCache
+compression_enabled	cache.h	/^    int compression_enabled;$/;"	m	struct:MCache
+compression_enabled	cache.h.bk.h	/^    int compression_enabled;$/;"	m	struct:MCache
+compression_enabled_token	configfile.h	/^    compression_enabled_token,$/;"	e	enum:__anon1
+compression_index	cache.h	/^    uns64 compression_index[64];$/;"	m	struct:MCache
+compression_mode	cache.h	/^    int compression_mode;$/;"	m	struct:MCache
+compression_mode	cache.h.bk.h	/^    int compression_mode;$/;"	m	struct:MCache
+compression_mode_token	configfile.h	/^    compression_mode_token,$/;"	e	enum:__anon1
+comptime	processor.h	/^  long long int * comptime;$/;"	m	struct:robstructure
+config_file	main.c	/^FILE *config_file=NULL;$/;"	v
+config_file	main_bk.c	/^FILE *config_file=NULL;$/;"	v
+config_param	main.c	/^int config_param=0;$/;"	v
+config_param	main_bk.c	/^int config_param=0;$/;"	v
+core_power	main.c	/^float core_power=0;$/;"	v
+core_power	main_bk.c	/^float core_power=0;$/;"	v
+count	hash_lib.h	/^    int  count;		\/\/ total number of elements in the hash table$/;"	m	struct:Hash_Table_struct
+cur_size	malloc_lib.h	/^    int  cur_size;$/;"	m	struct:SMalloc_Raw_struct
+data	hash_lib.h	/^    void *data;$/;"	m	struct:Hash_Table_Entry_struct
+data	main.c	/^    element data;$/;"	m	struct:node	file:
+data	malloc_lib.h	/^    void * data;$/;"	m	struct:SMalloc_Entry_struct
+data_size	hash_lib.h	/^    uns   data_size;$/;"	m	struct:Hash_Table_struct
+dirty	cache.h	/^    Flag dirty;$/;"	m	struct:MCache_Entry
+dirty	cache.h.bk.h	/^    Flag dirty;$/;"	m	struct:MCache_Entry
+dirty	os.h	/^    Flag dirty;$/;"	m	struct:InvPageTableEntry
+dispatch_time	memory_controller.h	/^  long long int dispatch_time; \/\/ when COL_RD or COL_WR is issued for this request$/;"	m	struct:req
+draddr	memory_controller.h	/^typedef struct draddr$/;"	s
+drain_writes	scheduler-fcfs.c	/^int drain_writes[MAX_NUM_CHANNELS];$/;"	v
+drain_writes	scheduler.c	/^int drain_writes[MAX_NUM_CHANNELS];$/;"	v
+dram_addr	memory_controller.h	/^  dram_address_t dram_addr;$/;"	m	struct:req
+dram_address_t	memory_controller.h	/^} dram_address_t;$/;"	t	typeref:struct:draddr
+dram_clk_frequency_token	configfile.h	/^    dram_clk_frequency_token,$/;"	e	enum:__anon1
+dram_state	memory_controller.h	/^bank_t dram_state[MAX_NUM_CHANNELS][MAX_NUM_RANKS][MAX_NUM_BANKS];$/;"	v
+element	main.c	/^typedef struct element{$/;"	s	file:
+element	main.c	/^}element;$/;"	t	typeref:struct:element	file:
+entries	cache.h	/^    MCache_Entry *entries;$/;"	m	struct:MCache
+entries	cache.h.bk.h	/^    MCache_Entry *entries;$/;"	m	struct:MCache
+entries	hash_lib.h	/^    Hash_Table_Entry **entries;$/;"	m	struct:Hash_Table_struct
+entries	os.h	/^    Hash_Table  *entries;$/;"	m	struct:PageTable
+entries	os.h	/^  InvPageTableEntry  *entries;$/;"	m	struct:InvPageTable
+evicted_dirty_page	os.h	/^    uns64        evicted_dirty_page;$/;"	m	struct:PageTable
+expanded_line_victims_rand	cache.c.bk.c	/^MCache_Entry expanded_line_victims_rand(MCache *c, Addr addr)$/;"	f
+expanded_line_victims_yacc	cache.c.bk.c	/^MCache_Entry expanded_line_victims_yacc(MCache *c, Addr addr)$/;"	f
+expt_done	main.c	/^int expt_done=0;  $/;"	v
+expt_done	main_bk.c	/^int expt_done=0;  $/;"	v
+fastmem_enabled_token	configfile.h	/^    fastmem_enabled_token,$/;"	e	enum:__anon1
+fetched	memory_controller.h	/^long long int *fetched;   \/\/ total fetched instructions in each core$/;"	v
+fifo_ptr	cache.h	/^    uns *fifo_ptr; \/\/ for fifo replacement (per set)$/;"	m	struct:MCache
+fifo_ptr	cache.h.bk.h	/^    uns *fifo_ptr; \/\/ for fifo replacement (per set)$/;"	m	struct:MCache
+flush_activate_record	memory_controller.c	/^void flush_activate_record(int channel, int rank, long long int cycle)$/;"	f
+forced_refresh_mode_on	memory_controller.h	/^long long int forced_refresh_mode_on[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+free_rand	main_bk.c	/^int free_rand(int numcores)$/;"	f
+free_wrapper	malloc_lib.c	/^static inline void free_wrapper(SMalloc_Entry *wrap){$/;"	f	file:
+gather_stats	memory_controller.c	/^void gather_stats(int channel)$/;"	f
+get_current_cycle	main.c	/^long long int get_current_cycle()$/;"	f
+get_current_cycle	main_bk.c	/^long long int get_current_cycle()$/;"	f
+get_wrapper	malloc_lib.c	/^static inline SMalloc_Entry * get_wrapper(){$/;"	f	file:
+hash_table_access	hash_lib.c	/^void *hash_table_access (Hash_Table const *table, int64 key)$/;"	f
+hash_table_access_create	hash_lib.c	/^void *hash_table_access_create (Hash_Table *table, int64 key, Flag *new_entry)$/;"	f
+hash_table_access_delete	hash_lib.c	/^Flag hash_table_access_delete (Hash_Table *table, int64 key)$/;"	f
+hash_table_clear	hash_lib.c	/^void hash_table_clear (Hash_Table *table)$/;"	f
+head	main.c	/^nodePointer head=NULL;$/;"	v
+head	processor.h	/^  int head;$/;"	m	struct:robstructure
+idd0_token	configfile.h	/^    idd0_token,$/;"	e	enum:__anon1
+idd2n_token	configfile.h	/^    idd2n_token,$/;"	e	enum:__anon1
+idd2p0_token	configfile.h	/^    idd2p0_token,$/;"	e	enum:__anon1
+idd2p1_token	configfile.h	/^    idd2p1_token,$/;"	e	enum:__anon1
+idd3n_token	configfile.h	/^    idd3n_token,$/;"	e	enum:__anon1
+idd3p_token	configfile.h	/^    idd3p_token,$/;"	e	enum:__anon1
+idd4r_token	configfile.h	/^    idd4r_token,$/;"	e	enum:__anon1
+idd4w_token	configfile.h	/^    idd4w_token,$/;"	e	enum:__anon1
+idd5_token	configfile.h	/^    idd5_token,$/;"	e	enum:__anon1
+ideal_compressor_enabled_token	configfile.h	/^    ideal_compressor_enabled_token,$/;"	e	enum:__anon1
+index_policy	cache.h	/^    uns index_policy; \/\/ how to index cache$/;"	m	struct:MCache
+index_policy	cache.h.bk.h	/^    uns index_policy; \/\/ how to index cache$/;"	m	struct:MCache
+inflight	processor.h	/^  int inflight;$/;"	m	struct:robstructure
+init_cache	cache.c	/^void init_cache(MCache* c, uns sets, uns assocs, uns repl_policy, uns linesize, int compression_enabled)$/;"	f
+init_cache	cache.c.bk.c	/^void init_cache(MCache* c, uns sets, uns assocs, uns repl_policy, uns linesize, int compression_enabled, int compression_mode, int max_blocks_per_line)$/;"	f
+init_hash_table	hash_lib.c	/^void init_hash_table (Hash_Table *table, char name[], uns buckets, uns data_size)$/;"	f
+init_memory_controller_vars	memory_controller.c	/^void init_memory_controller_vars()$/;"	f
+init_new_node	memory_controller.c	/^void * init_new_node(long long int physical_address, long long int arrival_time, optype_t type, int thread_id, int instruction_id, long long int instruction_pc)$/;"	f
+init_scheduler_vars	scheduler-fcfs.c	/^void init_scheduler_vars()$/;"	f
+init_scheduler_vars	scheduler.c	/^void init_scheduler_vars()$/;"	f
+insert_read	memory_controller.c	/^request_t * insert_read(long long int physical_address, long long int arrival_time, int thread_id, int instruction_id, long long int instruction_pc)$/;"	f
+insert_write	memory_controller.c	/^request_t * insert_write(long long int physical_address, long long int arrival_time, int thread_id, int instruction_id)$/;"	f
+insertnode	main.c	/^void insertnode(nodePointer *head, element item, char optype){$/;"	f
+install	cache.c	/^MCache_Entry install(MCache *c, Addr addr, Addr pc, Flag is_write, uns comp_size)$/;"	f
+install	cache.c.bk.c	/^MCache_Entry install(MCache *c, Addr addr, Addr pc, Flag is_write, uns comp_size)$/;"	f
+instrpc	processor.h	/^  long long int * instrpc;$/;"	m	struct:robstructure
+instruction_id	memory_controller.h	/^  int instruction_id; \/\/ 0 to ROBSIZE-1$/;"	m	struct:req
+instruction_pc	memory_controller.h	/^  long long int instruction_pc; \/\/ phy address of instruction that generated this request (valid only for reads)$/;"	m	struct:req
+int16	global_types.h	/^typedef short		    int16;$/;"	t
+int32	global_types.h	/^typedef int		    int32;$/;"	t
+int64	global_types.h	/^typedef int long long	    int64;$/;"	t
+ipt	os.h	/^    InvPageTable     *ipt;$/;"	m	struct:OS
+isHit	cache.c	/^int isHit(MCache *c, Addr addr, Flag is_write, uns comp_size)$/;"	f
+isHit	cache.c.bk.c	/^int isHit(MCache *c, Addr addr, Flag is_write, uns comp_size)$/;"	f
+is_T_FAW_met	memory_controller.c	/^int is_T_FAW_met(int channel,int rank, int cycle)$/;"	f
+is_activate_allowed	memory_controller.c	/^int is_activate_allowed(int channel, int rank, int bank)$/;"	f
+is_all_bank_precharge_allowed	memory_controller.c	/^int is_all_bank_precharge_allowed(int channel, int rank)$/;"	f
+is_autoprecharge_allowed	memory_controller.c	/^int is_autoprecharge_allowed(int channel, int rank, int bank)$/;"	f
+is_leader_p0	cache.h	/^    Flag *is_leader_p0; \/\/ leader SET for D(RR)IP$/;"	m	struct:MCache
+is_leader_p0	cache.h.bk.h	/^    Flag *is_leader_p0; \/\/ leader SET for D(RR)IP$/;"	m	struct:MCache
+is_leader_p1	cache.h	/^    Flag *is_leader_p1; \/\/ leader SET for D(RR)IP$/;"	m	struct:MCache
+is_leader_p1	cache.h.bk.h	/^    Flag *is_leader_p1; \/\/ leader SET for D(RR)IP$/;"	m	struct:MCache
+is_powerdown_fast_allowed	memory_controller.c	/^int is_powerdown_fast_allowed(int channel, int rank)$/;"	f
+is_powerdown_slow_allowed	memory_controller.c	/^int is_powerdown_slow_allowed(int channel, int rank)$/;"	f
+is_powerup_allowed	memory_controller.c	/^int is_powerup_allowed(int channel, int rank)$/;"	f
+is_precharge_allowed	memory_controller.c	/^int is_precharge_allowed(int channel, int rank, int bank)$/;"	f
+is_refresh_allowed	memory_controller.c	/^int is_refresh_allowed(int channel, int rank)$/;"	f
+issue_activate_command	memory_controller.c	/^int issue_activate_command(int channel, int rank, int bank, long long int row)$/;"	f
+issue_all_bank_precharge_command	memory_controller.c	/^int issue_all_bank_precharge_command(int channel, int rank)$/;"	f
+issue_autoprecharge	memory_controller.c	/^int issue_autoprecharge(int channel, int rank, int bank)$/;"	f
+issue_forced_refresh_commands	memory_controller.c	/^void issue_forced_refresh_commands(int channel, int rank)$/;"	f
+issue_powerdown_command	memory_controller.c	/^int issue_powerdown_command(int channel, int rank, command_t cmd)$/;"	f
+issue_powerup_command	memory_controller.c	/^int issue_powerup_command(int channel, int rank)$/;"	f
+issue_precharge_command	memory_controller.c	/^int issue_precharge_command(int channel, int rank, int bank)$/;"	f
+issue_refresh_command	memory_controller.c	/^int issue_refresh_command(int channel,int rank)$/;"	f
+issue_request_command	memory_controller.c	/^int issue_request_command(request_t * request) $/;"	f
+issued_forced_refresh_commands	memory_controller.h	/^long long int issued_forced_refresh_commands[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+key	hash_lib.h	/^    int64 key;$/;"	m	struct:Hash_Table_Entry_struct
+last_access	cache.h	/^    uns64 last_access;$/;"	m	struct:MCache_Entry
+last_access	cache.h.bk.h	/^    uns64 last_access;$/;"	m	struct:MCache_Entry
+last_activate	memory_controller.h	/^long long int last_activate[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+last_refresh	memory_controller.h	/^long long int last_refresh[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+last_refresh_completion_deadline	memory_controller.h	/^long long int last_refresh_completion_deadline[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+last_xlation	os.h	/^    VirtualPhysicalPair last_xlation[OS_MAX_THREADS];$/;"	m	struct:PageTable
+latency	memory_controller.h	/^  long long int latency; \/\/ dispatch_time-arrival_time$/;"	m	struct:req
+left_link	main.c	/^    struct node* left_link;$/;"	m	struct:node	typeref:struct:node::node	file:
+lineoffset	cache.h	/^    uns64 lineoffset;$/;"	m	struct:MCache
+lineoffset	cache.h.bk.h	/^    uns64 lineoffset;$/;"	m	struct:MCache
+lines_in_page	os.h	/^    uns               lines_in_page;$/;"	m	struct:OS
+linesize	cache.h	/^    uns linesize;$/;"	m	struct:MCache
+linesize	cache.h.bk.h	/^    uns linesize;$/;"	m	struct:MCache
+log_base2	memory_controller.c	/^unsigned int log_base2(unsigned int new_value)$/;"	f
+main	main.c	/^int main(int argc, char * argv[])$/;"	f
+main	main_bk.c	/^int main(int argc, char * argv[])$/;"	f
+map_block_cnt	cache.h	/^    uns map_block_cnt[16];$/;"	m	struct:MCache_Entry
+max	memory_controller.c	21;"	d	file:
+max_blocks_per_cacheline_token	configfile.h	/^    max_blocks_per_cacheline_token,$/;"	e	enum:__anon1
+max_blocks_per_line	cache.h	/^    int max_blocks_per_line;$/;"	m	struct:MCache
+max_blocks_per_line	cache.h.bk.h	/^    int max_blocks_per_line;$/;"	m	struct:MCache
+max_entries	os.h	/^    uns64        max_entries;$/;"	m	struct:PageTable
+max_fetch_token	configfile.h	/^    max_fetch_token,$/;"	e	enum:__anon1
+max_instructions_token	configfile.h	/^    max_instructions_token,$/;"	e	enum:__anon1
+max_retire_token	configfile.h	/^    max_retire_token,$/;"	e	enum:__anon1
+mcache_access	cache.c	/^int mcache_access(MCache *c, Addr addr, Flag dirty)$/;"	f
+mcache_access	cache.c.bk.c	/^int mcache_access(MCache *c, Addr addr, Flag dirty)$/;"	f
+mcache_access_rand	cache.c.bk.c	/^int mcache_access_rand(MCache *c, Addr addr, Flag dirty, uns comp_size)$/;"	f
+mcache_access_yacc	cache.c.bk.c	/^int mcache_access_yacc(MCache *c, Addr addr, Flag dirty, uns comp_size)$/;"	f
+mcache_dip_check_lru_update	cache.c	/^Flag mcache_dip_check_lru_update(MCache *c, uns set){$/;"	f
+mcache_dip_check_lru_update	cache.c.bk.c	/^Flag mcache_dip_check_lru_update(MCache *c, uns set){$/;"	f
+mcache_drrip_get_ripctrval	cache.c	/^uns mcache_drrip_get_ripctrval(MCache *c, uns set){$/;"	f
+mcache_drrip_get_ripctrval	cache.c.bk.c	/^uns mcache_drrip_get_ripctrval(MCache *c, uns set){$/;"	f
+mcache_find_victim	cache.c	/^uns mcache_find_victim (MCache *c, uns set)$/;"	f
+mcache_find_victim	cache.c.bk.c	/^uns mcache_find_victim (MCache *c, uns set)$/;"	f
+mcache_find_victim_fifo	cache.c	/^uns mcache_find_victim_fifo (MCache *c,  uns set)$/;"	f
+mcache_find_victim_fifo	cache.c.bk.c	/^uns mcache_find_victim_fifo (MCache *c,  uns set)$/;"	f
+mcache_find_victim_lru	cache.c	/^uns mcache_find_victim_lru (MCache *c,  uns set)$/;"	f
+mcache_find_victim_lru	cache.c.bk.c	/^uns mcache_find_victim_lru (MCache *c,  uns set)$/;"	f
+mcache_find_victim_rnd	cache.c	/^uns mcache_find_victim_rnd (MCache *c,  uns set)$/;"	f
+mcache_find_victim_rnd	cache.c.bk.c	/^uns mcache_find_victim_rnd (MCache *c,  uns set)$/;"	f
+mcache_find_victim_srrip	cache.c	/^uns mcache_find_victim_srrip (MCache *c,  uns set)$/;"	f
+mcache_find_victim_srrip	cache.c.bk.c	/^uns mcache_find_victim_srrip (MCache *c,  uns set)$/;"	f
+mcache_get_index	cache.c	/^uns mcache_get_index(MCache *c, Addr addr){$/;"	f
+mcache_get_index	cache.c.bk.c	/^uns mcache_get_index(MCache *c, Addr addr){$/;"	f
+mcache_install	cache.c	/^MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty)$/;"	f
+mcache_install	cache.c.bk.c	/^MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty)$/;"	f
+mcache_install_rand	cache.c.bk.c	/^MCache_Entry mcache_install_rand(MCache *c, Addr addr, Addr pc, Flag dirty, uns comp_size)$/;"	f
+mcache_install_yacc	cache.c.bk.c	/^MCache_Entry mcache_install_yacc(MCache *c, Addr addr, Addr pc, Flag dirty, uns comp_size)$/;"	f
+mcache_invalidate	cache.c	/^Flag mcache_invalidate    (MCache *c, Addr addr)$/;"	f
+mcache_invalidate	cache.c.bk.c	/^Flag mcache_invalidate    (MCache *c, Addr addr)$/;"	f
+mcache_mark_dirty	cache.c	/^Flag mcache_mark_dirty    (MCache *c, Addr tag)$/;"	f
+mcache_mark_dirty	cache.c.bk.c	/^Flag mcache_mark_dirty    (MCache *c, Addr tag)$/;"	f
+mcache_mark_dirty_rand	cache.c.bk.c	/^Flag mcache_mark_dirty_rand (MCache *c, Addr tag, Addr set, uns block_id)$/;"	f
+mcache_mark_dirty_yacc	cache.c.bk.c	/^Flag mcache_mark_dirty_yacc (MCache *c, Addr tag, Addr set, uns block_id)$/;"	f
+mcache_probe	cache.c	/^Flag mcache_probe    (MCache *c, Addr addr)$/;"	f
+mcache_probe	cache.c.bk.c	/^Flag mcache_probe    (MCache *c, Addr addr)$/;"	f
+mcache_probe_rand	cache.c.bk.c	/^Flag mcache_probe_rand(MCache *c, Addr addr)$/;"	f
+mcache_probe_yacc	cache.c.bk.c	/^Flag mcache_probe_yacc    (MCache *c, Addr addr)$/;"	f
+mcache_select_leader_sets	cache.c	/^void mcache_select_leader_sets(MCache *c, uns sets){$/;"	f
+mcache_select_leader_sets	cache.c.bk.c	/^void mcache_select_leader_sets(MCache *c, uns sets){$/;"	f
+mcache_swap_lines	cache.c	/^void mcache_swap_lines(MCache *c, uns set, uns way_ii, uns way_jj)$/;"	f
+mcache_swap_lines	cache.c.bk.c	/^void mcache_swap_lines(MCache *c, uns set, uns way_ii, uns way_jj)$/;"	f
+mem_address	processor.h	/^  long long int * mem_address;$/;"	m	struct:robstructure
+miss_count	os.h	/^    uns64        miss_count;$/;"	m	struct:PageTable
+name	hash_lib.h	/^    char *name;$/;"	m	struct:Hash_Table_struct
+next	hash_lib.h	/^    struct Hash_Table_Entry_struct *next;$/;"	m	struct:Hash_Table_Entry_struct	typeref:struct:Hash_Table_Entry_struct::Hash_Table_Entry_struct
+next	malloc_lib.h	/^    struct SMalloc_Entry_struct *next;$/;"	m	struct:SMalloc_Entry_struct	typeref:struct:SMalloc_Entry_struct::SMalloc_Entry_struct
+next	memory_controller.h	/^  struct req * next;$/;"	m	struct:req	typeref:struct:req::req
+next_act	memory_controller.h	/^  long long int next_act;$/;"	m	struct:bnk
+next_command	memory_controller.h	/^  command_t next_command; \/\/ what command needs to be issued to make forward progress with this request$/;"	m	struct:req
+next_powerdown	memory_controller.h	/^  long long int next_powerdown;$/;"	m	struct:bnk
+next_powerup	memory_controller.h	/^  long long int next_powerup;$/;"	m	struct:bnk
+next_pre	memory_controller.h	/^  long long int next_pre;$/;"	m	struct:bnk
+next_read	memory_controller.h	/^  long long int next_read;$/;"	m	struct:bnk
+next_refresh	memory_controller.h	/^  long long int next_refresh;$/;"	m	struct:bnk
+next_refresh_completion_deadline	memory_controller.h	/^long long int next_refresh_completion_deadline[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+next_write	memory_controller.h	/^  long long int next_write;$/;"	m	struct:bnk
+node	main.c	/^typedef struct node{$/;"	s	file:
+node	main.c	/^}node;$/;"	t	typeref:struct:node	file:
+nodePointer	main.c	/^typedef node* nodePointer;$/;"	t	file:
+num_aggr_precharge	scheduler.c	/^long long int num_aggr_precharge = 0;$/;"	v
+num_banks_token	configfile.h	/^    num_banks_token,$/;"	e	enum:__anon1
+num_channels_token	configfile.h	/^    num_channels_token,$/;"	e	enum:__anon1
+num_columns_token	configfile.h	/^    num_columns_token,$/;"	e	enum:__anon1
+num_entries	os.h	/^  uns          num_entries;$/;"	m	struct:InvPageTable
+num_issued_refreshes	memory_controller.h	/^long long int num_issued_refreshes[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+num_pages	os.h	/^    uns64             num_pages;$/;"	m	struct:OS
+num_ranks_token	configfile.h	/^    num_ranks_token,$/;"	e	enum:__anon1
+num_read_merge	memory_controller.h	/^long long int num_read_merge ;$/;"	v
+num_rows_token	configfile.h	/^    num_rows_token,$/;"	e	enum:__anon1
+num_threads	os.h	/^    uns               num_threads;$/;"	m	struct:OS
+num_write_merge	memory_controller.h	/^long long int num_write_merge ;$/;"	v
+operation_type	memory_controller.h	/^  optype_t operation_type; \/\/ Read\/Write$/;"	m	struct:req
+optype	processor.h	/^  int * optype;$/;"	m	struct:robstructure
+optype_t	memory_controller.h	/^typedef enum {READ, WRITE} optype_t;$/;"	t	typeref:enum:__anon3
+os	main_bk.c	/^OS *os;$/;"	v
+os_get_victim_from_ipt	os.c	/^uns    os_get_victim_from_ipt(OS *os)$/;"	f
+os_new	os.c	/^OS *os_new(uns num_pages, uns num_threads)$/;"	f
+os_print_stats	os.c	/^void os_print_stats(OS *os)$/;"	f
+os_v2p_lineaddr	os.c	/^Addr os_v2p_lineaddr(OS *os, Addr lineaddr, uns tid){$/;"	f
+os_vpn_to_pfn	os.c	/^uns os_vpn_to_pfn(OS *os, uns64 vpn, uns tid, Flag *hit)$/;"	f
+page_counter	main.c	/^long long int page_counter=0;$/;"	v
+pc	cache.h	/^    Addr pc;$/;"	m	struct:MCache_Entry
+pc	cache.h.bk.h	/^    Addr pc;$/;"	m	struct:MCache_Entry
+pfn	os.h	/^    uns  pfn;$/;"	m	struct:PageTableEntry
+pfn	os.h	/^  uns pfn;$/;"	m	struct:VirtualPhysicalPair
+physical_address	memory_controller.h	/^  unsigned long long int physical_address;$/;"	m	struct:req
+pipelinedepth_token	configfile.h	/^    pipelinedepth_token,$/;"	e	enum:__anon1
+prefixtable	main.c	/^int *prefixtable; \/* For (multi-threaded) MT workloads only *\/$/;"	v
+prefixtable	main_bk.c	/^int *prefixtable=NULL;$/;"	v
+print_cache_stats	cache.c	/^void print_cache_stats(MCache * llcache){$/;"	f
+print_cache_stats	cache.c.bk.c	/^void print_cache_stats(MCache * llcache){$/;"	f
+print_params	configfile.h	/^void print_params()$/;"	f
+print_stats	memory_controller.c	/^void print_stats(int channel)$/;"	f
+print_superblock_stat	cache.c.bk.c	/^void print_superblock_stat(MCache* llcache)$/;"	f
+printnode	main.c	/^void printnode(nodePointer temp){$/;"	f
+processor_clk_multiplier_token	configfile.h	/^    processor_clk_multiplier_token,$/;"	e	enum:__anon1
+psel	cache.h	/^    uns psel;$/;"	m	struct:MCache
+psel	cache.h.bk.h	/^    uns psel;$/;"	m	struct:MCache
+pt	os.h	/^    PageTable        *pt;$/;"	m	struct:OS
+ptr	malloc_lib.h	/^    char * ptr;$/;"	m	struct:SMalloc_Raw_struct
+rand_table	main_bk.c	/^long int **rand_table;$/;"	v
+rank	memory_controller.h	/^  int rank;	\/\/ rank id$/;"	m	struct:draddr
+raw_mem_ptr	malloc_lib.c	/^static char * raw_mem_ptr  = NULL;$/;"	v	file:
+raw_mem_size	malloc_lib.c	/^static int  raw_mem_size   = 0;$/;"	v	file:
+rd_cnt	main.c	/^    long long int rd_cnt;$/;"	m	struct:element	file:
+read_config_file	configfile.h	/^void read_config_file(FILE * fin)$/;"	f
+read_matches_write_or_read_queue	memory_controller.c	/^int read_matches_write_or_read_queue(long long int physical_address)$/;"	f
+read_queue_head	memory_controller.h	/^request_t * read_queue_head[MAX_NUM_CHANNELS];$/;"	v
+read_queue_length	memory_controller.h	/^long long int read_queue_length[MAX_NUM_CHANNELS];$/;"	v
+recent_colacc	scheduler.c	/^int recent_colacc[MAX_NUM_CHANNELS][MAX_NUM_RANKS][MAX_NUM_BANKS];$/;"	v
+record_activate	memory_controller.c	/^void record_activate(int channel, int rank, long long int cycle)$/;"	f
+ref	os.h	/^    Flag ref;$/;"	m	struct:InvPageTableEntry
+refptr	os.h	/^  uns          refptr;$/;"	m	struct:InvPageTable
+refresh_issue_deadline	memory_controller.h	/^long long int refresh_issue_deadline[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+repl_policy	cache.h	/^    MCache_ReplPolicy repl_policy; \/\/0:LRU  1:RND 2:SRRIP$/;"	m	struct:MCache
+repl_policy	cache.h.bk.h	/^    MCache_ReplPolicy repl_policy; \/\/0:LRU  1:RND 2:SRRIP$/;"	m	struct:MCache
+req	memory_controller.h	/^typedef struct req$/;"	s
+request_served	memory_controller.h	/^  int request_served; \/\/ if request has it's final command issued or not$/;"	m	struct:req
+request_t	memory_controller.h	/^} request_t;$/;"	t	typeref:struct:req
+right_link	main.c	/^    struct node* right_link;$/;"	m	struct:node	typeref:struct:node::node	file:
+ripctr	cache.h	/^    uns ripctr;$/;"	m	struct:MCache_Entry
+ripctr	cache.h.bk.h	/^    uns ripctr;$/;"	m	struct:MCache_Entry
+robf_stalls	main.c	/^long long int robf_stalls=0;$/;"	v
+robf_stalls	main_bk.c	/^long long int robf_stalls=0;$/;"	v
+robn_stalls	main.c	/^long long int robn_stalls=0;$/;"	v
+robn_stalls	main_bk.c	/^long long int robn_stalls=0;$/;"	v
+robsize_token	configfile.h	/^    robsize_token,$/;"	e	enum:__anon1
+robstructure	processor.h	/^struct robstructure$/;"	s
+row	memory_controller.h	/^  long long int row;	\/\/ row\/page id$/;"	m	struct:draddr
+s_access_valid_entry_to_install	cache.h	/^    uns64 s_access_valid_entry_to_install;$/;"	m	struct:MCache
+s_count	cache.h	/^    uns64 s_count; \/\/ number of accesses$/;"	m	struct:MCache
+s_count	cache.h.bk.h	/^    uns64 s_count; \/\/ number of accesses$/;"	m	struct:MCache
+s_diff_comp_size	cache.h	/^    uns64 s_diff_comp_size;$/;"	m	struct:MCache
+s_evict	cache.h	/^    uns64 s_evict; \/\/ number of evictions$/;"	m	struct:MCache
+s_evict	cache.h.bk.h	/^    uns64 s_evict; \/\/ number of evictions$/;"	m	struct:MCache
+s_fail_install_sblock	cache.h	/^    uns64 s_fail_install_sblock;$/;"	m	struct:MCache
+s_miss	cache.h	/^    uns64 s_miss; \/\/ number of misses$/;"	m	struct:MCache
+s_miss	cache.h.bk.h	/^    uns64 s_miss; \/\/ number of misses$/;"	m	struct:MCache
+s_noroom_in_sblock	cache.h	/^    uns64 s_noroom_in_sblock;$/;"	m	struct:MCache
+s_read	cache.h	/^    uns64 s_read;$/;"	m	struct:MCache
+s_read	cache.h.bk.h	/^    uns64 s_read;$/;"	m	struct:MCache
+s_sblock_aggr	cache.h	/^    uns64 s_sblock_aggr[5];$/;"	m	struct:MCache
+s_sblock_called	cache.h	/^    uns64 s_sblock_called;$/;"	m	struct:MCache
+s_sblock_cnt	cache.h	/^    uns64 s_sblock_cnt[5]; \/\/1: 1 subblock, 1: 2 subblock, 2: 3 subblock, 3: 4 subblock$/;"	m	struct:MCache
+s_sblock_cnt	cache.h.bk.h	/^    uns64 s_sblock_cnt[5]; \/\/1: 1 subblock, 1: 2 subblock, 2: 3 subblock, 3: 4 subblock$/;"	m	struct:MCache
+s_success_install_sblock	cache.h	/^    uns64 s_success_install_sblock;$/;"	m	struct:MCache
+s_write	cache.h	/^    uns64 s_write;$/;"	m	struct:MCache
+s_write	cache.h.bk.h	/^    uns64 s_write;$/;"	m	struct:MCache
+s_writeback	cache.h	/^    uns64 s_writeback; \/\/ number of writeback$/;"	m	struct:MCache
+s_writeback	cache.h.bk.h	/^    uns64 s_writeback; \/\/ number of writeback$/;"	m	struct:MCache
+schedule	scheduler-fcfs.c	/^void schedule(int channel)$/;"	f
+schedule	scheduler.c	/^void schedule(int channel)$/;"	f
+scheduler_stats	scheduler-fcfs.c	/^void scheduler_stats()$/;"	f
+scheduler_stats	scheduler.c	/^void scheduler_stats()$/;"	f
+sets	cache.h	/^    uns sets;$/;"	m	struct:MCache
+sets	cache.h.bk.h	/^    uns sets;$/;"	m	struct:MCache
+sfree	malloc_lib.c	/^void sfree (int nbytes, void * item){$/;"	f
+smalloc	malloc_lib.c	/^void *smalloc (int nbytes){$/;"	f
+smalloc_free_list	malloc_lib.c	/^static SMalloc_Entry * smalloc_free_list[MAX_SMALLOC];$/;"	v	file:
+state	memory_controller.h	/^  bankstate_t state;$/;"	m	struct:bnk
+stats_average_read_latency	memory_controller.h	/^double stats_average_read_latency[MAX_NUM_CHANNELS];$/;"	v
+stats_average_read_queue_latency	memory_controller.h	/^double stats_average_read_queue_latency[MAX_NUM_CHANNELS];$/;"	v
+stats_average_write_latency	memory_controller.h	/^double stats_average_write_latency[MAX_NUM_CHANNELS];$/;"	v
+stats_average_write_queue_latency	memory_controller.h	/^double stats_average_write_queue_latency[MAX_NUM_CHANNELS];$/;"	v
+stats_num_activate	memory_controller.h	/^long long int stats_num_activate[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+stats_num_activate_read	memory_controller.h	/^long long int stats_num_activate_read[MAX_NUM_CHANNELS][MAX_NUM_RANKS][MAX_NUM_BANKS];$/;"	v
+stats_num_activate_spec	memory_controller.h	/^long long int stats_num_activate_spec[MAX_NUM_CHANNELS][MAX_NUM_RANKS][MAX_NUM_BANKS];$/;"	v
+stats_num_activate_write	memory_controller.h	/^long long int stats_num_activate_write[MAX_NUM_CHANNELS][MAX_NUM_RANKS][MAX_NUM_BANKS];$/;"	v
+stats_num_powerdown_fast	memory_controller.h	/^long long int stats_num_powerdown_fast[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+stats_num_powerdown_slow	memory_controller.h	/^long long int stats_num_powerdown_slow[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+stats_num_powerup	memory_controller.h	/^long long int stats_num_powerup[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+stats_num_precharge	memory_controller.h	/^long long int stats_num_precharge[MAX_NUM_CHANNELS][MAX_NUM_RANKS][MAX_NUM_BANKS];$/;"	v
+stats_num_read	memory_controller.h	/^long long int stats_num_read[MAX_NUM_CHANNELS][MAX_NUM_RANKS][MAX_NUM_BANKS];$/;"	v
+stats_num_write	memory_controller.h	/^long long int stats_num_write[MAX_NUM_CHANNELS][MAX_NUM_RANKS][MAX_NUM_BANKS];$/;"	v
+stats_page_hits	memory_controller.h	/^long long int stats_page_hits[MAX_NUM_CHANNELS];$/;"	v
+stats_read_row_hit_rate	memory_controller.h	/^double stats_read_row_hit_rate[MAX_NUM_CHANNELS];$/;"	v
+stats_reads_completed	memory_controller.h	/^long long int stats_reads_completed[MAX_NUM_CHANNELS];$/;"	v
+stats_reads_merged_per_channel	memory_controller.h	/^long long int stats_reads_merged_per_channel[MAX_NUM_CHANNELS];$/;"	v
+stats_reads_seen	memory_controller.h	/^long long int stats_reads_seen[MAX_NUM_CHANNELS];$/;"	v
+stats_time_spent_in_active_power_down	memory_controller.h	/^long long int stats_time_spent_in_active_power_down[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+stats_time_spent_in_active_standby	memory_controller.h	/^long long int stats_time_spent_in_active_standby[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+stats_time_spent_in_power_up	memory_controller.h	/^long long int stats_time_spent_in_power_up[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+stats_time_spent_in_precharge_power_down_fast	memory_controller.h	/^long long int stats_time_spent_in_precharge_power_down_fast[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+stats_time_spent_in_precharge_power_down_slow	memory_controller.h	/^long long int stats_time_spent_in_precharge_power_down_slow[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+stats_time_spent_terminating_reads_from_other_ranks	memory_controller.h	/^long long int stats_time_spent_terminating_reads_from_other_ranks[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+stats_time_spent_terminating_writes_to_other_ranks	memory_controller.h	/^long long int stats_time_spent_terminating_writes_to_other_ranks[MAX_NUM_CHANNELS][MAX_NUM_RANKS];$/;"	v
+stats_writes_completed	memory_controller.h	/^long long int stats_writes_completed[MAX_NUM_CHANNELS];$/;"	v
+stats_writes_merged_per_channel	memory_controller.h	/^long long int stats_writes_merged_per_channel[MAX_NUM_CHANNELS];$/;"	v
+stats_writes_seen	memory_controller.h	/^long long int stats_writes_seen[MAX_NUM_CHANNELS];$/;"	v
+t_cas_token	configfile.h	/^    t_cas_token,$/;"	e	enum:__anon1
+t_ccd_token	configfile.h	/^    t_ccd_token,$/;"	e	enum:__anon1
+t_cwd_token	configfile.h	/^    t_cwd_token,$/;"	e	enum:__anon1
+t_data_trans_token	configfile.h	/^    t_data_trans_token,$/;"	e	enum:__anon1
+t_faw_token	configfile.h	/^    t_faw_token,$/;"	e	enum:__anon1
+t_pd_min_token	configfile.h	/^    t_pd_min_token,$/;"	e	enum:__anon1
+t_ras_token	configfile.h	/^    t_ras_token,$/;"	e	enum:__anon1
+t_rc_token	configfile.h	/^    t_rc_token,$/;"	e	enum:__anon1
+t_rcd_token	configfile.h	/^    t_rcd_token,$/;"	e	enum:__anon1
+t_refi_token	configfile.h	/^    t_refi_token,$/;"	e	enum:__anon1
+t_rfc_token	configfile.h	/^    t_rfc_token,$/;"	e	enum:__anon1
+t_rp_token	configfile.h	/^    t_rp_token,$/;"	e	enum:__anon1
+t_rrd_token	configfile.h	/^    t_rrd_token,$/;"	e	enum:__anon1
+t_rtp_token	configfile.h	/^    t_rtp_token,$/;"	e	enum:__anon1
+t_rtrs_token	configfile.h	/^    t_rtrs_token,$/;"	e	enum:__anon1
+t_wr_token	configfile.h	/^    t_wr_token,$/;"	e	enum:__anon1
+t_wtr_token	configfile.h	/^    t_wtr_token,$/;"	e	enum:__anon1
+t_xp_dll_token	configfile.h	/^    t_xp_dll_token,$/;"	e	enum:__anon1
+t_xp_token	configfile.h	/^    t_xp_token,$/;"	e	enum:__anon1
+tag	cache.h	/^    Addr tag;$/;"	m	struct:MCache_Entry
+tag	cache.h.bk.h	/^    Addr tag;$/;"	m	struct:MCache_Entry
+tag_rand	cache.h	/^    Addr tag_rand[4];$/;"	m	struct:MCache_Entry
+tag_rand	cache.h.bk.h	/^    Addr tag_rand[4];$/;"	m	struct:MCache_Entry
+tail	processor.h	/^  int tail;$/;"	m	struct:robstructure
+thread_id	memory_controller.h	/^  int thread_id; \/\/ core that issued this request$/;"	m	struct:req
+tif	main.c	/^FILE **tif=NULL;  \/* The handles to the trace input files. *\/$/;"	v
+tif	main_bk.c	/^FILE **tif=NULL;  \/* The handles to the trace input files. *\/$/;"	v
+time_done	main.c	/^long long int *time_done;$/;"	v
+time_done	main_bk.c	/^long long int *time_done;$/;"	v
+token_t	configfile.h	/^}token_t;$/;"	t	typeref:enum:__anon1
+tokenize	configfile.h	/^token_t tokenize(char * input){$/;"	f
+total_evicts	os.h	/^    uns64        total_evicts;$/;"	m	struct:PageTable
+total_time_done	main.c	/^long long int total_time_done;$/;"	v
+total_time_done	main_bk.c	/^long long int total_time_done;$/;"	v
+touched_lineid	cache.h	/^    int touched_lineid;$/;"	m	struct:MCache
+touched_lineid	cache.h.bk.h	/^    int touched_lineid;$/;"	m	struct:MCache
+touched_setid	cache.h	/^    int touched_setid;$/;"	m	struct:MCache
+touched_setid	cache.h.bk.h	/^    int touched_setid;$/;"	m	struct:MCache
+touched_wayid	cache.h	/^    int touched_wayid;$/;"	m	struct:MCache
+touched_wayid	cache.h.bk.h	/^    int touched_wayid;$/;"	m	struct:MCache
+tracedone	processor.h	/^  int tracedone;$/;"	m	struct:robstructure
+unknown_token	configfile.h	/^    unknown_token$/;"	e	enum:__anon1
+uns	global_types.h	/^typedef unsigned	    uns;$/;"	t
+uns16	global_types.h	/^typedef unsigned short	    uns16;$/;"	t
+uns32	global_types.h	/^typedef unsigned	    uns32;$/;"	t
+uns64	global_types.h	/^typedef unsigned long long  uns64;$/;"	t
+uns8	global_types.h	/^typedef unsigned char	    uns8;$/;"	t
+update_issuable_commands	memory_controller.c	/^void update_issuable_commands(int channel)$/;"	f
+update_memory	memory_controller.c	/^void update_memory()$/;"	f
+update_read_queue_commands	memory_controller.c	/^void update_read_queue_commands(int channel)$/;"	f
+update_write_queue_commands	memory_controller.c	/^void update_write_queue_commands(int channel)$/;"	f
+user_ptr	memory_controller.h	/^  void * user_ptr; \/\/ user_specified data$/;"	m	struct:req
+valid	cache.h	/^    Flag valid;$/;"	m	struct:MCache_Entry
+valid	cache.h.bk.h	/^    Flag valid;$/;"	m	struct:MCache_Entry
+valid	os.h	/^    Flag valid;$/;"	m	struct:InvPageTableEntry
+vdd_token	configfile.h	/^    vdd_token,$/;"	e	enum:__anon1
+vi_file	main.c	/^FILE *vi_file=NULL;$/;"	v
+vi_file	main_bk.c	/^FILE *vi_file=NULL;$/;"	v
+vpn	os.h	/^    uns64  vpn;$/;"	m	struct:InvPageTableEntry
+vpn	os.h	/^  uns64 vpn;$/;"	m	struct:VirtualPhysicalPair
+wq_capacity_token	configfile.h	/^    wq_capacity_token,$/;"	e	enum:__anon1
+wq_lookup_latency_token	configfile.h	/^    wq_lookup_latency_token,$/;"	e	enum:__anon1
+wr_cnt	main.c	/^    long long int wr_cnt;;$/;"	m	struct:element	file:
+wrapper_free_list	malloc_lib.c	/^static SMalloc_Entry * wrapper_free_list = NULL;$/;"	v	file:
+write_exists_in_write_queue	memory_controller.c	/^int write_exists_in_write_queue(long long int physical_address)$/;"	f
+write_queue_head	memory_controller.h	/^request_t * write_queue_head[MAX_NUM_CHANNELS];$/;"	v
+write_queue_length	memory_controller.h	/^long long int write_queue_length[MAX_NUM_CHANNELS];$/;"	v
+wrqf_stalls	main.c	/^long long int wrqf_stalls=0;$/;"	v
+wrqf_stalls	main_bk.c	/^long long int wrqf_stalls=0;$/;"	v
+wrqn_stalls	main.c	/^long long int wrqn_stalls=0;$/;"	v
+wrqn_stalls	main_bk.c	/^long long int wrqn_stalls=0;$/;"	v
+yacc_comp	cache.h	/^    uns yacc_comp;$/;"	m	struct:MCache_Entry
+yacc_comp	cache.h.bk.h	/^    uns yacc_comp;$/;"	m	struct:MCache_Entry
