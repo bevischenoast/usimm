@@ -84,7 +84,8 @@ typedef enum {
 	cache_bank_token,
 	me_mode_token,
 	me_bypassing_mode_token,
-	base_hybrid_mode_token,
+	sttram_mode_token,
+	hybrid_mode_token,
 	cache_sram_ways_token,
 	cache_sttram_ways_token,
 	cache_sram_size_token,
@@ -226,8 +227,10 @@ token_t tokenize(char * input){
 		return me_mode_token;
 	} else if (strncmp(input,"ME_bypassing_mode",length)==0){
 		return me_bypassing_mode_token;
-	} else if (strncmp(input,"base_hybrid_mode",length)==0){
-		return base_hybrid_mode_token;
+    } else if (strncmp(input,"sttram_mode",length)==0){
+        return sttram_mode_token;
+	} else if (strncmp(input,"hybrid_mode",length)==0){
+		return hybrid_mode_token;
 	} else if (strncmp(input,"CACHE_SIZE_SRAM",length)==0){
 		return cache_sram_size_token;
 	} else if (strncmp(input,"CACHE_SIZE_STTRAM",length)==0){
@@ -575,9 +578,13 @@ void read_config_file(FILE * fin)
 				fscanf(fin,"%d",&input_int);
 				ME_bypassing_mode = input_int;
 				break;
-			case base_hybrid_mode_token:
+            case sttram_mode_token:
+                fscanf(fin,"%d",&input_int);
+                sttram_mode = input_int;
+                break;
+			case hybrid_mode_token:
 				fscanf(fin,"%d",&input_int);
-				base_hybrid_mode = input_int;
+				hybrid_mode = input_int;
 				break;
 			case cache_sram_size_token:
 				fscanf(fin,"%d",&input_int);
@@ -611,7 +618,7 @@ void print_params()
     printf("FF_INSTRUCTIONS_PER_CORE:  %llu\n", FF_INST);
 	printf("ME_mode: %d\n",ME_mode);
 	printf("ME_bypassing_mode: %d\n",ME_bypassing_mode);
-	printf("base_hybrid_mode: %d\n",base_hybrid_mode);
+	printf("hybrid_mode: %d\n",hybrid_mode);
     
     printf("\n-------------\n");
     printf("- PROCESSOR -\n");

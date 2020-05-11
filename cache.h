@@ -113,7 +113,7 @@ int isHit(MCache* c, Addr addr, Flag dirty, uns comp_size);
 
 MCache_Entry install(MCache* c, Addr addr, Addr pc, Flag dirty, uns comp_size);
 
-MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty);
+MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty, uns comp_size);
 
 
 void mcache_new(MCache* c, uns sets, uns assocs, uns linesize, uns repl);

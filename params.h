@@ -9,7 +9,8 @@ unsigned long long MAX_INST; // 4 Billion by default
 unsigned long long FF_INST;  //the number of instructions that will be fast-forworded
 int ME_mode;
 int ME_bypassing_mode;
-int base_hybrid_mode;
+int hybrid_mode;
+int sttram_mode;
 
 /********************/
 /* Processor params */

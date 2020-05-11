@@ -32,7 +32,13 @@ long long int refetched_cacheline_cnt=0;
 long long int new_cacheline_cnt=0;
 long long int victim_dirty=0;
 long long int victim_clean=0;
-
+long long int metadata_hit_cnt=0;
+long long int metadata_miss_cnt=0;
+//Memory Statistics
+unsigned long long int read_traffic=0;
+unsigned long long int write_traffic=0;
+unsigned long long int write_traffic_dirty=0;
+unsigned long long int write_traffic_clean=0;
 
 typedef struct element{
     long long int addr;
@@ -177,6 +183,197 @@ uns64 llc_bypass_cnt=0;
 uns64 llc_bypass_read=0;
 uns64 llc_bypass_write=0;
 
+MCache_Entry llc_miss_handler(Addr addr,char optype, int compressedSize, Addr instrpc, char is_write,
+                              MCache* L3Cache, MCache* L3Cache_STTRAM, MCache* L3Cache_SRAM,
+        long long int *llc_available_cycle, int banknum)
+{
+    bool installed_sram=0;
+    //lookup the cache line in the hash table
+    Element* elm=insertnode(addr>>6,optype,compressedSize);
+    MCache_Entry victim;
+
+    if(elm)
+        refetched_cacheline_cnt++;
+    else
+        new_cacheline_cnt++;
+
+    if(hybrid_mode) {
+        if (ME_mode) {
+            int is_write_intensive = 0;
+            int is_llc_friendly = 1;
+
+            //determine whether this cache block is write intensive or read intensive
+            if (elm) {
+                if(elm->wr_intensive)
+                    is_write_intensive = 1;
+
+                if (elm->access_count == 0)
+                    is_llc_friendly = 0;
+                else
+                    is_llc_friendly = 1;
+            }
+
+            //todo: need to check implementation of ME bypassing mode
+            /*if(ME_bypassing_mode)
+            {
+                if((is_llc_friendly && elm && elm->is_metadata==1) || compressedSize1Line[numc]>61){
+                    if(is_write_intensive)
+                    {
+                        victim=install(L3Cache_SRAM, addr[numc], instrpc[numc], is_write,compressedSize1Line[numc]);  //addr[numc] is byte address here
+                        installed_sram=1;
+                    }
+                    else
+                    {
+                        victim=install(L3Cache_STTRAM, addr[numc], instrpc[numc], is_write,compressedSize1Line[numc]);  //addr[numc] is byte address here
+                        installed_sram=0;
+                    }
+                    llc_install_cnt++;
+                }
+                else{
+                    llc_bypass_read++;
+                    llc_bypass_cnt++;
+                }
+            }
+            else*/
+            {
+                if (!elm) //if the cache block is new
+                {
+                    victim = install(L3Cache_STTRAM, addr, instrpc, is_write,
+                                     compressedSize);  //addr[numc] is byte address here
+                    installed_sram = 0; // install it into the sttram because the current miss is read miss.
+                }
+                else {
+                    if (elm->is_metadata == 0) // this cache block is refetched cache line, but it does not have metadata
+                    {
+                        metadata_hit_cnt++;
+                        victim = install(L3Cache_STTRAM, addr, instrpc, is_write,
+                                         compressedSize);  //addr[numc] is byte address here
+                        installed_sram = 0; //install it into the sttram because the current miss is read miss.
+
+                    } else // this cache block is refetched cache block, and it does not have metadata
+                    {
+                        metadata_miss_cnt++;
+                        if (is_write_intensive) {
+                            victim = install(L3Cache_SRAM, addr, instrpc, is_write,
+                                             compressedSize);  //addr[numc] is byte address here
+                            installed_sram = 1;
+                        } else {
+                            victim = install(L3Cache_STTRAM, addr, instrpc, is_write,
+                                             compressedSize);  //addr[numc] is byte address here
+                            installed_sram = 0;
+                        }
+                    }
+                }
+            }
+        }
+        else{
+            victim = install(L3Cache_STTRAM, addr, instrpc, is_write, compressedSize);  //addr[numc] is byte address here
+            installed_sram = 0; //install new cache block in sttram
+        }
+    }
+    else
+    {
+        victim=install(L3Cache, addr, instrpc, is_write,compressedSize);  //addr[numc] is byte address here
+
+        if(!sttram_mode)
+            installed_sram=1; //install new cache block in sram
+        else
+            installed_sram=0; //install new cache block in sttmram
+    }
+
+    //determine the write latency and record the available time of the selected bank
+    int write_latency=0;
+    if(installed_sram){
+        write_latency=L3_LATENCY_WRITE_SRAM;
+        sram_install_cnt++;
+    }
+    else
+    {
+        write_latency=L3_LATENCY_WRITE_STTRAM;
+        sttram_install_cnt++;
+    }
+    llc_available_cycle[banknum]=CYCLE_VAL+write_latency;
+
+    return victim;
+}
+
+void victim_block_handler(MCache_Entry victim, MCache* L3Cache, int numc, int ROB_tail){
+
+    Addr wb_addr=0;
+
+    //record the property of victim block
+    if(victim.valid)
+    {
+        if(victim.access_count>0)
+            llc_friendly_cacheline++;
+        else
+            llc_unfriendly_cacheline++;
+
+        //record the number of access count
+        Element * elm_victim=lookup(cl_table, victim.tag);
+        elm_victim->access_count=victim.access_count;
+
+        //check the intensive property of cache block
+        //todo: need to check this part
+        if((float)elm_victim->wr_cnt/((float)elm_victim->wr_cnt+(float)elm_victim->rd_cnt)>0.1){
+            if(elm_victim->wr_intensive==0 && elm_victim->rd_intensive==0)
+                elm_victim->wr_intensive=1;
+            else if(elm_victim->wr_intensive==0 && elm_victim->rd_intensive==1){
+                elm_victim->pp_changed++;
+                elm_victim->rd_intensive=0;
+                elm_victim->wr_intensive=1;
+            }
+            else if(elm_victim->wr_intensive==1 && elm_victim->rd_intensive==0)
+                elm_victim->pp_unchanged++;
+        }
+        else{
+            if(elm_victim->rd_intensive==0 && elm_victim->wr_intensive==0)
+                elm_victim->rd_intensive=1;
+            else if(elm_victim->rd_intensive==0 && elm_victim->wr_intensive==1){
+                elm_victim->pp_changed++;
+                elm_victim->wr_intensive=0;
+                elm_victim->rd_intensive=1;
+            }
+            else if(elm_victim->rd_intensive==1 && elm_victim->wr_intensive==0)
+                elm_victim->pp_unchanged++;
+        }
+
+        //write back a victim block
+        if(victim.dirty)
+        {
+            victim_dirty++;
+            write_traffic++;
+            write_traffic_dirty++;
+
+            if(victim.comp_size<61) // we will use 15bit as signature and 1bit to store metadata
+                elm_victim->is_metadata=1;
+
+            wb_addr = victim.tag << L3Cache->lineoffset;
+            insert_write(wb_addr, CYCLE_VAL, numc, ROB_tail);
+        }else
+        {
+            victim_clean++;
+
+            if(ME_mode) {
+                //todo: clean write back
+                if(elm_victim->is_metadata==0) {
+                    write_traffic++;
+                    write_traffic_clean++;
+                    if (victim.comp_size < 61) // we will use 15bit as signature and 1bit to store metadata
+                        elm_victim->is_metadata = 1;
+
+                    wb_addr = victim.tag << L3Cache->lineoffset;
+                    insert_write(wb_addr, CYCLE_VAL, numc, ROB_tail);
+                }
+            }
+        }
+
+        elm_victim->wr_cnt=0;
+        elm_victim->rd_cnt=0;
+    }
+}
+
+
 int main(int argc, char * argv[])
 {
     
@@ -206,11 +403,7 @@ int main(int argc, char * argv[])
     long long int *instrpc;
     int *compressedSize1Line;
     int *compressedSize2Line;
-    
-    //Memory Statistics
-    unsigned long long int read_traffic=0;
-    unsigned long long int write_traffic_dirty=0;
-	unsigned long long int write_traffic_clean=0;
+
     
     int chips_per_rank=-1;
     long long int total_inst_fetched = 0;
@@ -244,7 +437,7 @@ int main(int argc, char * argv[])
 	L3_LATENCY_WRITE_SRAM=30;
 	L3_LATENCY_WRITE_STTRAM=60;
 	ME_mode=0;
-	base_hybrid_mode=0;
+	hybrid_mode=0;
 	ME_bypassing_mode=0;
     
     //To keep track of how much is done
@@ -410,6 +603,7 @@ int main(int argc, char * argv[])
 	printf("Start Fast Forwarding!!\n");
 	fflush(stdout);
     temp_inst_cntr2=0;
+    char is_write=0;
 
 	while(ff_done_global==0)
 	{
@@ -445,14 +639,18 @@ int main(int argc, char * argv[])
 				//Insert the OS here to do a Virtual to Physical Translation since we are using a virtual address trace
 				Addr phy_lineaddr=os_v2p_lineaddr(os,addr[numc]>>L3Cache->lineoffset,numc);
 				addr[numc]=phy_lineaddr<<(L3Cache->lineoffset);  //convert the line address to byte address
+                if (opertype[numc] == 'R')
+                    is_write=0;
+                else
+                    is_write=1;
 
 				//fill cache during the fast-forwording
-				int L3Hit = isHit(L3Cache, addr[numc], false, compressedSize1Line[numc]); //addr[numc] is byte address here
+				int L3Hit = isHit(L3Cache, addr[numc], is_write, compressedSize1Line[numc]); //addr[numc] is byte address here
                 
                 MCache_Entry victim;
                 
 				if(L3Hit==0)
-                     victim=install(L3Cache, addr[numc], instrpc[numc], false,compressedSize1Line[numc]);  //addr[numc] is byte address here
+                     victim=install(L3Cache, addr[numc], instrpc[numc], is_write,compressedSize1Line[numc]);  //addr[numc] is byte address here
                      
                 
                 uns64 addr_tmp=addr[numc]>>6;
@@ -573,16 +771,15 @@ int main(int argc, char * argv[])
                         num_fetch++;
                     }
                     else{ /* Done consuming non-memory-ops.  Must now consume the memory rd or wr. */
-						
+
+                        //determine the bank number
 						int banknum =  (addr[numc]>>6)%CACHE_BANKS;
-						int installed_sram=0;
-						
+
+						//check if a bank is available for the current cache access
 						if(llc_available_cycle[banknum]> CYCLE_VAL)
 							break;
-						
-                        //lookup the cache line in the hash table
-                        Element* elm=insertnode(addr[numc]>>6,opertype[numc],compressedSize1Line[numc]);
-						
+
+						//read
                         if (opertype[numc] == 'R') 
                         {
                             ROB[numc].mem_address[ROB[numc].tail] = addr[numc];
@@ -590,216 +787,54 @@ int main(int argc, char * argv[])
                             ROB[numc].comptime[ROB[numc].tail] = CYCLE_VAL + BIGNUM;
                             ROB[numc].instrpc[ROB[numc].tail] = instrpc[numc];
                             long long int wb_addr = 0;
-                            //long long int wb_inst_addr = 0;
-                            MCache_Entry victim;
-                            victim.valid=0;
+
                             int L3Hit = 0;
-                            
-							if(ME_mode || base_hybrid_mode)
+
+                            //access cache
+							if(hybrid_mode)
 							{
 								L3Hit = isHit(L3Cache_SRAM, addr[numc], false, compressedSize1Line[numc]); //addr[numc] is byte address here
 								if(!L3Hit)
 									L3Hit = isHit(L3Cache_STTRAM, addr[numc], false, compressedSize1Line[numc]); //addr[numc] is byte address here
 							}
-							else
-								L3Hit = isHit(L3Cache, addr[numc], false, compressedSize1Line[numc]); //addr[numc] is byte address here
-                           
-							if(L3Hit==0)
-							{
-                                if(elm)
-                                    refetched_cacheline_cnt++;
-                                else
-                                    new_cacheline_cnt++;
+							else {
+                                L3Hit = isHit(L3Cache, addr[numc], false,
+                                              compressedSize1Line[numc]); //addr[numc] is byte address here
+                            }
 
-								if(ME_mode)
-								{
-									int is_write_intensive=0;
-									int is_llc_friendly=1;
+							// Cache hit
+							if(L3Hit==1)
+                            {
+                                llc_available_cycle[banknum] = CYCLE_VAL+L3_LATENCY_READ;
+                                ROB[numc].comptime[ROB[numc].tail] = CYCLE_VAL+L3_LATENCY_READ+PIPELINEDEPTH;
+                            }
+							else // Cache miss
+                            {
+							    //update LLC
+                                MCache_Entry victim = llc_miss_handler(addr[numc],opertype[numc],compressedSize1Line[numc],
+                                                 instrpc[numc],false,L3Cache,L3Cache_STTRAM,L3Cache_SRAM,llc_available_cycle,banknum);
 
-									//determine whether this cache block is write intensive or read intensive
-									if(elm)
-									{
-										if((float)elm->wr_cnt/((float)elm->wr_cnt+(float)elm->rd_cnt)>0.1)
-											is_write_intensive=1;
+                                //handling victim block
+                                victim_block_handler(victim, L3Cache, numc, ROB[numc].tail);
 
-										if(elm->access_count==0)
-											is_llc_friendly=0;
-                                        else
-                                            is_llc_friendly=1;
-									}
+                                // Check to see if the read is for buffered data in write queue -
+                                // return constant latency if match in WQ
+                                // add in read queue otherwise
+                                int lat = read_matches_write_or_read_queue(addr[numc]);
 
-
-									//todo: need to check implementation of ME bypassing mode
-									/*if(ME_bypassing_mode)
-									{
-										if((is_llc_friendly && elm && elm->is_metadata==1) || compressedSize1Line[numc]>61){
-											if(is_write_intensive)
-											{
-												victim=install(L3Cache_SRAM, addr[numc], instrpc[numc], false,compressedSize1Line[numc]);  //addr[numc] is byte address here
-												installed_sram=1;
-											}
-											else
-											{
-												victim=install(L3Cache_STTRAM, addr[numc], instrpc[numc], false,compressedSize1Line[numc]);  //addr[numc] is byte address here
-												installed_sram=0;
-											}
-                                            llc_install_cnt++;
-										}
-                                        else{
-											llc_bypass_read++;
-                                            llc_bypass_cnt++;
-										}
-									}
-									else*/
-									{
-                                        if(!elm) //if the cache block is new
-                                        {
-                                            victim=install(L3Cache_STTRAM, addr[numc], instrpc[numc], false,compressedSize1Line[numc]);  //addr[numc] is byte address here
-                                            installed_sram=0; // install it into the sttram because the current miss is read miss.
-                                        }
-                                        else if(elm->is_metadata==0) // this cache block is refetched cache line, but it does not have metadata
-                                        {
-                                            victim=install(L3Cache_STTRAM, addr[numc], instrpc[numc], false,compressedSize1Line[numc]);  //addr[numc] is byte address here
-                                            installed_sram=0; //install it into the sttram because the current miss is read miss.
-                                        }
-                                        else if(elm->is_metadata==1) // this cache block is refetched cache block, and it does not have metadata
-                                        {
-											if(is_write_intensive)
-											{
-												victim=install(L3Cache_SRAM, addr[numc], instrpc[numc], false,compressedSize1Line[numc]);  //addr[numc] is byte address here
-												installed_sram=1;
-											}
-											else
-											{
-												victim=install(L3Cache_STTRAM, addr[numc], instrpc[numc], false,compressedSize1Line[numc]);  //addr[numc] is byte address here
-												installed_sram=0;
-											}
-									    }
-								    }
-                                }
-								else if(base_hybrid_mode)
-                                {
-									victim=install(L3Cache_STTRAM, addr[numc], instrpc[numc], false,compressedSize1Line[numc]);  //addr[numc] is byte address here
-                                    installed_sram=0; //install new cache block in sttram
-                                }
-								else
-                                {
-									victim=install(L3Cache, addr[numc], instrpc[numc], false,compressedSize1Line[numc]);  //addr[numc] is byte address here
-                                    installed_sram=1; //install new cache block in sram
-                                }
-								
-                                if(victim.valid)
-                                {
-                                    if(victim.access_count>0)
-                                        llc_friendly_cacheline++;
-                                    else
-                                        llc_unfriendly_cacheline++;
-									
-                                
-                                    //record the number of access count
-                                    Element * elm_tmp=lookup(cl_table, victim.tag);
-                                    elm_tmp->access_count=victim.access_count;
-
-									if(victim.dirty){
-										victim_dirty++;
-										if(victim.)
-										elm_tmp->is_metadata=1;
-									}else{
-										victim_clean++;
-									}
-
-									//check the intensive property of cachelines
-									if((float)elm_tmp->wr_cnt/((float)elm_tmp->wr_cnt+(float)elm_tmp->rd_cnt)>0.1){
-										if(elm_tmp->wr_intensive==0 && elm_tmp->rd_intensive==0)
-											elm_tmp->wr_intensive=1;
-										else if(elm_tmp->wr_intensive==0 && elm_tmp->rd_intensive==1){
-											elm_tmp->pp_changed++;
-											elm_tmp->rd_intensive=0;
-											elm_tmp->wr_intensive=1;
-										}
-										else if(elm_tmp->wr_intensive==1 && elm_tmp->rd_intensive==0)
-											elm_tmp->pp_unchanged++;
-									}
-									else{
-										if(elm_tmp->rd_intensive==0 && elm_tmp->wr_intensive==0)
-											elm_tmp->rd_intensive=1;
-										else if(elm_tmp->rd_intensive==0 && elm_tmp->wr_intensive==1){
-											elm_tmp->pp_changed++;
-											elm_tmp->wr_intensive=0;
-											elm_tmp->rd_intensive=1;
-										}
-										else if(elm_tmp->rd_intensive==1 && elm_tmp->wr_intensive==0)
-											elm_tmp->pp_unchanged++;
-									}
-									elm_tmp->wr_cnt=0;
-									elm_tmp->rd_cnt=0;
-
-                                    
-                                    int write_latency=0;
-								    if(installed_sram){
-									    write_latency=L3_LATENCY_WRITE_SRAM;
-                                        sram_install_cnt++;
-                                    }
-								    else
-                                    {
-									    write_latency=L3_LATENCY_WRITE_STTRAM;
-                                        sttram_install_cnt++;
-                                    }
-
-				    		    	llc_available_cycle[banknum]=CYCLE_VAL+write_latency;
-	
-                                }
-							}
-                            
-                            // Check to see if the read is for buffered data in write queue -
-                            // return constant latency if match in WQ
-                            // add in read queue otherwise
-                            int lat = read_matches_write_or_read_queue(addr[numc]);
-                            
-                            if(FASTMEM_ENABLED ==1)
-                                lat = 1;
-							
-							if(L3Hit==1){
-				    				llc_available_cycle[banknum]=CYCLE_VAL+L3_LATENCY_READ;
-                                    ROB[numc].comptime[ROB[numc].tail] = CYCLE_VAL+L3_LATENCY_READ+PIPELINEDEPTH;
-                            }else{
-                                //evict all compressed cache lines in the victim data block
-								 if(victim.valid){
-								 	Element * elm_tmp=lookup(cl_table, victim.tag);
-                                 	elm_tmp->access_count=victim.access_count;
-								 
-	                         
-                                 	if(victim.dirty)
-                                 	{
-                                    	write_traffic_dirty++;
-                                     	wb_addr = victim.tag << L3Cache->lineoffset;
-                                     	insert_write(wb_addr, CYCLE_VAL, numc, ROB[numc].tail);
-                                 	}
-                              	 	if(!victim.dirty && (victim.access_count>0) && !elm_tmp->is_metadata)
-                                 	{
-										elm_tmp->is_metadata=1;
-                                     	write_traffic_clean++;
-                                     	wb_addr = victim.tag << L3Cache->lineoffset;
-                                     	insert_write(wb_addr, CYCLE_VAL, numc, ROB[numc].tail);
-                                	 }
-								 }
                                 // Check to see if the read is for buffered data in write queue -
                                 // return constant latency if match in WQ
                                 // add in read queue otherwise
                                 if(lat) {
-                                    if(FASTMEM_ENABLED){
-                                        read_traffic++;
-                                    }
                                     ROB[numc].comptime[ROB[numc].tail] = CYCLE_VAL+lat+PIPELINEDEPTH;
                                 }
                                 else {
-                                    if(!FASTMEM_ENABLED){
-                                        read_traffic++;
-                                    }
+                                    read_traffic++;
                                     insert_read(addr[numc], CYCLE_VAL, numc, ROB[numc].tail, instrpc[numc]);
                                 }
                             }
                         }
+                        // write
                         else{  /* This must be a 'W'.  We are confirming that while reading the trace. */
                             if (opertype[numc] == 'W') 
                             {
@@ -808,167 +843,29 @@ int main(int argc, char * argv[])
                                 ROB[numc].comptime[ROB[numc].tail] = CYCLE_VAL+PIPELINEDEPTH;
                                 /* Also, add this to the write queue. */
                                 long long int wb_addr = 0;
-                                MCache_Entry victim;
-                                victim.valid=0;
                                 
 								int L3Hit=0;
                                 int is_hit_sram=0;
 
-								if(ME_mode ||base_hybrid_mode)
+								if(hybrid_mode)
 								{
-									L3Hit = isHit(L3Cache_SRAM, addr[numc], false, compressedSize1Line[numc]); //addr[numc] is byte address here
+									L3Hit = isHit(L3Cache_SRAM, addr[numc], true, compressedSize1Line[numc]); //addr[numc] is byte address here
 									if(!L3Hit)
                                     {
-										L3Hit = isHit(L3Cache_STTRAM, addr[numc], false, compressedSize1Line[numc]); //addr[numc] is byte address here
+										L3Hit = isHit(L3Cache_STTRAM, addr[numc], true, compressedSize1Line[numc]); //addr[numc] is byte address here
                                         is_hit_sram=0;    
 								    }
                                     else
                                         is_hit_sram=1;
                                 }
 								else{
-									L3Hit = isHit(L3Cache, addr[numc], false, compressedSize1Line[numc]); //addr[numc] is byte address here
-                                    is_hit_sram=1;
-                                }
-
-                                
-                                if(L3Hit==0)
-                                {
-                                   if(elm)
-                                        refetched_cacheline_cnt++;
+									L3Hit = isHit(L3Cache, addr[numc], true, compressedSize1Line[numc]); //addr[numc] is byte address here
+                                    if(!sttram_mode)
+									    is_hit_sram=1;
                                     else
-                                        new_cacheline_cnt++;
-
-									if(ME_mode)
-									{
-										int is_write_intensive=0;
-										int is_llc_friendly=1;
-
-										if(elm)
-										{
-											if((float)elm->wr_cnt/((float)elm->wr_cnt+(float)elm->rd_cnt)>0.1)
-												is_write_intensive=1;
-
-											if(elm->access_count==0)
-												is_llc_friendly=0;
-                                            else
-                                                is_llc_friendly=1;
-										}
-										
-										if(ME_bypassing_mode)
-										{
-											if((is_llc_friendly && elm && elm->is_metadata==1) || compressedSize1Line[numc]>61 ){
-												if(is_write_intensive)
-                                                {
-													victim=install(L3Cache_SRAM, addr[numc], instrpc[numc], true,compressedSize1Line[numc]);  //addr[numc] is byte address here
-                                                    installed_sram=1;
-                                                }
-												else
-                                                {
-													victim=install(L3Cache_STTRAM, addr[numc], instrpc[numc], true,compressedSize1Line[numc]);  //addr[numc] is byte address here
-                                                    installed_sram=0;
-											    }
-                                                llc_install_cnt++;
-										    }
-                                            else{
-												wb_addr = victim.tag << L3Cache->lineoffset;
-                                       			if(!FASTMEM_ENABLED){
-                                            	insert_write(wb_addr, CYCLE_VAL, numc, ROB[numc].tail);
-												}
-												llc_bypass_write++;
-                                                llc_bypass_cnt++;
-											}
-                                        }
-										else
-										{
-                                            if(!elm || compressedSize1Line[numc]>61)// if the cache line is new, install it into the sram because the miss is write miss
-                                            {
-		                                    	victim=install(L3Cache_SRAM, addr[numc], instrpc[numc], true,compressedSize1Line[numc]);  //addr[numc] is byte address here
-                                                installed_sram=1;
-                                            }
-                                            else
-                                            {
-												if(is_write_intensive)
-                                                {
-													victim=install(L3Cache_SRAM, addr[numc], instrpc[numc], true,compressedSize1Line[numc]);  //addr[numc] is byte address here
-                                                    installed_sram=1;
-                                                }
-												else
-                                                {
-													victim=install(L3Cache_STTRAM, addr[numc], instrpc[numc], true,compressedSize1Line[numc]);  //addr[numc] is byte address here
-                                                    installed_sram=0;
-										        }
-									        }
-                                        }
-                                    }
-									else if(base_hybrid_mode)
-                                    {
-										victim=install(L3Cache_SRAM, addr[numc], instrpc[numc], true,compressedSize1Line[numc]);  //addr[numc] is byte address here
-                                        installed_sram=1;
-                                    }
-									else
-										victim=install(L3Cache, addr[numc], instrpc[numc], true,compressedSize1Line[numc]);  //addr[numc] is byte address here
-									
-
-                                    if(victim.valid)
-                                    {
-                                        if(victim.access_count>0)
-                                            llc_friendly_cacheline++;
-                                        else
-                                            llc_unfriendly_cacheline++;
-
-                                    
-                                        //record the number of access count
-                                        Element * elm_tmp=lookup(cl_table, victim.tag);
-                                        elm_tmp->access_count=victim.access_count;
-	                            		
-										if(victim.dirty){
-											victim_dirty++;
-											elm_tmp->is_metadata=1;//move to write on memory
-										}else{
-											victim_clean++;
-										}
-                                    
-										if((float)elm_tmp->wr_cnt/((float)elm_tmp->wr_cnt+(float)elm_tmp->rd_cnt)>0.1){
-											if(elm_tmp->wr_intensive==0 && elm_tmp->rd_intensive==0)
-												elm_tmp->wr_intensive=1;
-											else if(elm_tmp->wr_intensive==0 && elm_tmp->rd_intensive==1){
-												elm_tmp->pp_changed++;
-												elm_tmp->rd_intensive=0;
-												elm_tmp->wr_intensive=1;
-											}
-											else if(elm_tmp->wr_intensive==1 && elm_tmp->rd_intensive==0)
-												elm_tmp->pp_unchanged++;
-										}
-										else{
-											if(elm_tmp->rd_intensive==0 && elm_tmp->wr_intensive==0)
-												elm_tmp->rd_intensive=1;
-											else if(elm_tmp->rd_intensive==0 && elm_tmp->wr_intensive==1){
-												elm_tmp->pp_changed++;
-												elm_tmp->wr_intensive=0;
-												elm_tmp->rd_intensive=1;
-											}
-											else if(elm_tmp->rd_intensive==1 && elm_tmp->wr_intensive==0)
-												elm_tmp->pp_unchanged++;
-									}
-									elm_tmp->wr_cnt=0;
-									elm_tmp->rd_cnt=0;
-
-     
-                                        int write_latency=0;
-								        if(installed_sram)
-                                        {
-								         	write_latency=L3_LATENCY:_WRITE_SRAM;
-                                            sram_install_cnt++;
-                                        }
-								        else
-                                        {
-								         	write_latency=L3_LATENCY_WRITE_STTRAM;
-                                            sttram_install_cnt++;
-                                        }
-    				    				llc_available_cycle[banknum]=CYCLE_VAL+write_latency;
-                                     }
+                                        is_hit_sram=0;
                                 }
-                                
+
                                 if(L3Hit==1){
                                     if(is_hit_sram)
                                     {
@@ -981,48 +878,38 @@ int main(int argc, char * argv[])
                                         llc_available_cycle[banknum]=CYCLE_VAL+L3_LATENCY_WRITE_STTRAM;
                                     }
                                 }
-                                else if(L3Hit == 0){
-                                    //evict all compressed cache lines in the victim data block
-									if(victim.valid){	
-										Element * elm_tmp=lookup(cl_table, victim.tag);
-                                   	 	elm_tmp->access_count=victim.access_count;
-	                         
-                                    	if(victim.dirty)
-                                    	{
-                                        	write_traffic_dirty++;
-                                        	wb_addr = victim.tag << L3Cache->lineoffset;
-                                        	if(!FASTMEM_ENABLED){
-                                            	insert_write(wb_addr, CYCLE_VAL, numc, ROB[numc].tail);
-                                        	}
-                                    	}
-										if(!victim.dirty &&(victim.access_count>0)&& !elm_tmp->is_metadata)//todo: change to else if
-                                    	{
-											elm_tmp->is_metadata=1;
-                                        	write_traffic_clean++;
-                                        	wb_addr = victim.tag << L3Cache->lineoffset;
-                                        	if(!FASTMEM_ENABLED){
-                                            	insert_write(wb_addr, CYCLE_VAL, numc, ROB[numc].tail);
-                                        	}
-                                    	}
-									}
+                                else if(L3Hit == 0) {
+                                    //update LLC
+                                    MCache_Entry victim = llc_miss_handler(addr[numc], opertype[numc],
+                                                                           compressedSize1Line[numc],
+                                                                           instrpc[numc], true, L3Cache, L3Cache_STTRAM,
+                                                                           L3Cache_SRAM, llc_available_cycle, banknum);
+                                    //handing victim block
+                                    victim_block_handler(victim, L3Cache,numc, ROB[numc].tail);
 
 
-                                }
-                                
-                                for(int c=0; c<NUM_CHANNELS; c++){
-                                    if(write_queue_length[c] >= WQ_CAPACITY)
-                                    {
-                                        writeqfull = 1;
-                                        break;
+                                    // Check to see if the read is for buffered data in write queue -
+                                    // return constant latency if match in WQ
+                                    // add in read queue otherwise
+                                    int lat = read_matches_write_or_read_queue(addr[numc]);
+
+                                    // Check to see if the read is for buffered data in write queue -
+                                    // return constant latency if match in WQ
+                                    // add in read queue otherwise
+                                    if (lat) {
+                                        ROB[numc].comptime[ROB[numc].tail] = CYCLE_VAL + lat + PIPELINEDEPTH;
+                                    } else {
+                                        read_traffic++;
+                                        insert_read(addr[numc], CYCLE_VAL, numc, ROB[numc].tail, instrpc[numc]);
                                     }
                                 }
-
                             }
                             else {
                                 fprintf(stderr,"Panic.  Poor trace format. \n");
                                 return -1;
                             }
                         }
+
 
 
                        	//insertnode(item,opertype[numc]);
@@ -1166,9 +1053,9 @@ int main(int argc, char * argv[])
     scheduler_stats();
     print_cache_stats(L3Cache);
 
-    printf("L3Cache_SRAM statistics");
+    printf("L3Cache_SRAM statistics\n");
     print_cache_stats(L3Cache_SRAM);
-    printf("L3Cache_STTRAM statistics");
+    printf("L3Cache_STTRAM statistics\n");
     print_cache_stats(L3Cache_STTRAM);
 
     print_stats();
@@ -1214,7 +1101,10 @@ int main(int argc, char * argv[])
 	printf("REFETCH NEW %lld %lld\n",refetched_cacheline_cnt,new_cacheline_cnt);
 	printf("DIRTY CLEAN %lld %lld\n",victim_dirty,victim_clean);
 	printf("TT_R_WD_WC %lld\t%lld\t%lld\t%lld\n",read_traffic+write_traffic_dirty+write_traffic_clean,read_traffic,write_traffic_dirty,write_traffic_clean);
-    
+
+    printf("METADATA HIT %lld\n",metadata_hit_cnt);
+    printf("METADATA MISS %lld\n",metadata_miss_cnt);
+
     //Freeing all used memory
     for(int i = 0; i < NUMCORES; i++){
         //fclose(tif[i]);
