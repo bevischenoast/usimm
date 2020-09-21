@@ -11,6 +11,7 @@ struct robstructure
   int * optype;
   long long int * instrpc;
   int tracedone;
+  long long int * issue_time;
 } ;
 
 #endif //__PROCESSOR_H__

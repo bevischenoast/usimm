@@ -129,6 +129,9 @@ int mcache_access(MCache *c, Addr addr, Flag dirty)
             entry->ripctr       = MCACHE_SRRIP_MAX;
 			entry->access_count++;
 
+			if(dirty) entry->wr_count++;
+			else entry->rd_count++;
+
             c->touched_wayid = (ii-start);
             c->touched_setid = set;
             c->touched_lineid = ii;
@@ -286,6 +289,9 @@ MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty, uns comp_
     entry->valid = TRUE;
     entry->pc    = pc;
 	entry->access_count =0;
+	entry->wr_count=0;
+	entry->rd_count=0;
+	entry->comp_size=comp_size;
 
     if(dirty==TRUE)
         entry->dirty=TRUE;
@@ -421,15 +427,28 @@ uns mcache_find_victim_lru (MCache *c,  uns set)
     uns end   = start + c->assocs;
     uns lowest=start;
     uns ii;
+    uns victim_idx;
     
     
-    for (ii = start; ii < end; ii++){
-        if (c->entries[ii].last_access < c->entries[lowest].last_access){
-            lowest = ii;
+    //todo
+ /*   for (ii = start; ii < end; ii++){
+        //todo: select an invalid block as the victim first
+        found=true;
+        victim_idx=ii;
+        */
+    //todo: proactively invalidate a dead block
+    //if(!found)
+    {
+        for (ii = start; ii < end; ii++){
+            //todo: select an invalid block as the victim first
+            if (c->entries[ii].last_access < c->entries[lowest].last_access){
+                lowest = ii;
+                victim_idx=ii;
+            }
         }
     }
-    
-    return lowest;
+
+    return victim_idx;
 }
 
 ////////////////////////////////////////////////////////////

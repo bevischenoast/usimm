@@ -7,11 +7,10 @@ typedef struct ht_element{
     long long int wr_cnt;
 	long long int access_count;
     int compressedSize;
-	int rd_intensive;
-	int wr_intensive;
 	long long int pp_changed;
 	long long int pp_unchanged;
 	int is_metadata;
+	int intensity;
 }Element;
 
 

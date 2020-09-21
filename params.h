@@ -11,6 +11,8 @@ int ME_mode;
 int ME_bypassing_mode;
 int hybrid_mode;
 int sttram_mode;
+int clean_write_mode;
+float intensity_threshold;
 
 /********************/
 /* Processor params */

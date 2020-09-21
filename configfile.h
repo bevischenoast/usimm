@@ -89,7 +89,9 @@ typedef enum {
 	cache_sram_ways_token,
 	cache_sttram_ways_token,
 	cache_sram_size_token,
-	cache_sttram_size_token
+	cache_sttram_size_token,
+	clean_write_mode_token,
+	intensity_threshold_token
 
 }token_t;
 
@@ -235,6 +237,10 @@ token_t tokenize(char * input){
 		return cache_sram_size_token;
 	} else if (strncmp(input,"CACHE_SIZE_STTRAM",length)==0){
 		return cache_sttram_size_token;
+	} else if (strncmp(input,"clean_write_mode",length)==0){
+        return clean_write_mode_token;
+    } else if (strncmp(input,"intensity_threshold",length)==0){
+		return intensity_threshold_token;
 	}
 	else {
         printf("PANIC :Unknown token %s\n",input);
@@ -594,6 +600,15 @@ void read_config_file(FILE * fin)
 				fscanf(fin,"%d",&input_int);
 				CACHE_SIZE_STTRAM = input_int;
 				break;
+            case clean_write_mode_token:
+                fscanf(fin,"%d",&input_int);
+                clean_write_mode = input_int;
+                break;
+			case intensity_threshold_token:
+				fscanf(fin,"%f",&input_float);
+				intensity_threshold = input_float;
+				break;
+
             case unknown_token:
             default:
                 printf("PANIC: bad token in cfg file\n");

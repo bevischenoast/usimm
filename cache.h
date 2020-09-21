@@ -39,6 +39,8 @@ typedef struct MCache_Entry {
     uns block_queue[4];
     uns map_block_cnt[16];
 	uns64 access_count;
+	uns64 rd_count;
+	uns64 wr_count;
 	uns comp_size;
 
 } MCache_Entry;
