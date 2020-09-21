@@ -23,6 +23,7 @@
 typedef struct MCache_Entry {
     Flag valid;
     Flag dirty;
+    Flag dead;
     Addr tag;
     //For Random Compression Algorithm
     Addr tag_rand[4];

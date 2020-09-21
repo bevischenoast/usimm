@@ -239,7 +239,27 @@ Flag mcache_mark_dirty    (MCache *c, Addr tag)
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
+Flag mcache_mark_dead    (MCache *c, Addr tag)
+{
+    //uns64 offset = c->lineoffset;
+    uns   set  = mcache_get_index(c,tag);
+    uns   start = set * c->assocs;
+    uns   end   = start + c->assocs;
+    uns   ii;
 
+    for (ii=start; ii<end; ii++){
+        MCache_Entry *entry = &c->entries[ii];
+        if(entry->valid && (entry->tag == tag))
+        {
+            entry->dirty = TRUE;
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
 MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty, uns comp_size)
 {
     uns64 offset = c->lineoffset;
@@ -287,6 +307,7 @@ MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty, uns comp_
     //put new information in
     entry->tag   = tag;
     entry->valid = TRUE;
+    entry->dead  = 0;
     entry->pc    = pc;
 	entry->access_count =0;
 	entry->wr_count=0;
@@ -428,22 +449,44 @@ uns mcache_find_victim_lru (MCache *c,  uns set)
     uns lowest=start;
     uns ii;
     uns victim_idx;
-    
-    
-    //todo
- /*   for (ii = start; ii < end; ii++){
-        //todo: select an invalid block as the victim first
-        found=true;
-        victim_idx=ii;
+    flag found = 0;
+
+    /*if (cache_type == IS_LLC ) {
+            if (block[set][way].valid){
+                uncore.LLC.LATENCY = high_llc_write_latency;
+                slow_write_cnt++;
+                fill_not_invalid_cnt++;
+
+                // invalid dead block in the set first
+                for(uint8_t i=0; i<NUM_WAY; i++) {
+                    if (block[set][i].lru == NUM_WAY - 2) {
+                        block[set][i].dead = 1;
+                        block[set][i].valid = 0;
+                    }
+                }
+            }
+            else{
+                uncore.LLC.LATENCY = low_llc_write_latency;
+                fast_write_cnt++;
+                fill_invalid_cnt++;
+            }
+        }
         */
-    //todo: proactively invalidate a dead block
-    //if(!found)
-    {
+   for (ii=start; ii<end; ii++){
+       MCache_Entry *entry = &c->entries[ii];
+       if (entry->dead){
+           found = 1;
+           victim_idx = ii;
+       }
+   }
+    //proactively invalidate a dead block
+    if(!found){
         for (ii = start; ii < end; ii++){
-            //todo: select an invalid block as the victim first
+            //select an invalid block as the victim first
             if (c->entries[ii].last_access < c->entries[lowest].last_access){
                 lowest = ii;
                 victim_idx=ii;
+                entry->dead = 1;
             }
         }
     }
