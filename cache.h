@@ -23,15 +23,14 @@
 typedef struct MCache_Entry {
     Flag valid;
     Flag dirty;
-    Flag dead;
     Addr tag;
     //For Random Compression Algorithm
     Addr tag_rand[4];
-    Addr address;
+
     Addr pc;
     uns ripctr;
     uns64 last_access;
-    
+
     uns yacc_comp;
     uns block_valid[4]; //block id used in YACC
     uns block_dirty[4]; //dirty bit for blocks
@@ -39,10 +38,10 @@ typedef struct MCache_Entry {
     uns block_overwritten[4];
     uns block_queue[4];
     uns map_block_cnt[16];
-	uns64 access_count;
-	uns64 rd_count;
-	uns64 wr_count;
-	uns comp_size;
+    uns64 access_count;
+    uns64 rd_count;
+    uns64 wr_count;
+    uns comp_size;
 
 } MCache_Entry;
 
@@ -63,22 +62,22 @@ typedef struct MCache {
     uns64 lineoffset;
     MCache_ReplPolicy repl_policy; //0:LRU  1:RND 2:SRRIP
     uns index_policy; // how to index cache
-    
+
     Flag *is_leader_p0; // leader SET for D(RR)IP
     Flag *is_leader_p1; // leader SET for D(RR)IP
     uns psel;
-    
+
     MCache_Entry *entries;
     uns *fifo_ptr; // for fifo replacement (per set)
-    
+
     uns64 s_count; // number of accesses
     uns64 s_miss; // number of misses
     uns64 s_evict; // number of evictions
     uns64 s_writeback; // number of writeback
-    
+
     uns64 s_read;
     uns64 s_write;
-    
+
     uns64 s_sblock_cnt[5]; //1: 1 subblock, 1: 2 subblock, 2: 3 subblock, 3: 4 subblock
     uns64 s_sblock_called;
     uns64 s_sblock_aggr[5];
@@ -93,19 +92,30 @@ typedef struct MCache {
     int touched_wayid;
     int touched_setid;
     int touched_lineid;
-    
 
+    //Compression Related Parameters
+    int compression_enabled;
+    int compression_mode;
+    int max_blocks_per_line;
+    uns64 compression_index[64];
+
+    uns64 compression_16;
+    uns64 compression_32;
+    uns64 compression_48;
+    uns64 compression_61;
+    uns64 compression_64;
+    uns64 compression_accesses;
 } MCache;
 
 
-void init_cache(MCache* c, uns sets, uns assocs, uns repl, uns block_size);
+void init_cache(MCache* c, uns sets, uns assocs, uns repl, uns block_size, int compression_enabled);
 
-int isHit(MCache* c, Addr addr, Flag dirty);
+int isHit(MCache* c, Addr addr, Flag dirty, uns comp_size);
 
 
-MCache_Entry install(MCache* c, Addr addr, Addr pc, Flag dirty);
+MCache_Entry install(MCache* c, Addr addr, Addr pc, Flag dirty, uns comp_size);
 
-MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty);
+MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty, uns comp_size);
 
 
 void mcache_new(MCache* c, uns sets, uns assocs, uns linesize, uns repl);
