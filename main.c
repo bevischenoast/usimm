@@ -15,25 +15,36 @@
 #include "map.h"
 #include "zlib.h"
 
+//From Intel Skylake 6660U
+#define L3_LATENCY 30
+#define DECOMPRESSION_LATENCY 1
 
 #define MAXTRACELINESIZE 128
 
 #define HASHTABLE_SIZE 1024*1024
 
 //Set this for table length of randomizer
-#define MAX_TABLE_LEN 1024 
+#define MAX_TABLE_LEN 1024
 char ff_done_global=0;
+long long int llc_friendly_cacheline=0;
+long long int llc_unfriendly_cacheline=0;
 long long int refetched_cacheline_cnt=0;
 long long int new_cacheline_cnt=0;
 long long int victim_dirty=0;
 long long int victim_clean=0;
+long long int metadata_hit_cnt=0;
+long long int metadata_miss_cnt=0;
+long long int sram_read_hit=0;
+long long int sram_write_hit=0;
+long long int sttram_read_hit=0;
+long long int sttram_write_hit=0;
 long long int llc_read_miss=0;
 long long int llc_write_miss=0;
 long long int llc_read_access=0;
-//////////////////////////////////////////
-
-//////////////////////////////////////////
 long long int llc_write_access=0;
+long long int write_intensive=0;
+long long int read_intensive=0;
+long long int non_intensive=0;
 long long int pp_changed=0;
 long long int pp_unchanged=0;
 long long int G_pp_changed=0;
@@ -46,7 +57,7 @@ long long int w_to_r=0;
 long long int r_to_n=0;
 long long int r_to_w=0;
 long long int access_sum=0;
-long long int num_ret_read=0; 
+long long int num_ret_read=0;
 long long int access_clean=0;
 long long int access_dirty=0;
 
@@ -58,7 +69,7 @@ unsigned long long int write_traffic_clean=0;
 
 
 typedef struct node{
-   // element data;
+    // element data;
     struct node* left_link;
     struct node* right_link;
 }node;
@@ -68,7 +79,7 @@ nodePointer head=NULL;
 
 Hashtable *cl_table = NULL;
 
-Element* insertnode(uns64 addr, char optype)
+Element* insertnode(uns64 addr, char optype, int compressedSize)
 {
     Element* elm=lookup(cl_table, addr);
 
@@ -82,22 +93,25 @@ Element* insertnode(uns64 addr, char optype)
         else if(optype=='W'){
             elm->wr_cnt+=1;
         }
+        elm->compressedSize=compressedSize;
         return elm;
     }
     else //if not, insert the key and value
     {
         Element* new_elm=createElement();
-         if(optype=='R'){
+        if(optype=='R'){
             new_elm->rd_cnt+=1;
         }
         else if(optype=='W'){
             new_elm->wr_cnt+=1;
         }
-
-		new_elm->intensity=0;
-		new_elm->pp_changed=0;
-		new_elm->pp_unchanged=0;
-		new_elm->is_metadata=0;
+        new_elm->compressedSize=compressedSize;
+        //new_elm->rd_intensive=0;
+        //new_elm->wr_intensive=0;
+        new_elm->intensity=0;
+        new_elm->pp_changed=0;
+        new_elm->pp_unchanged=0;
+        new_elm->is_metadata=0;
 
         insert(cl_table,addr,new_elm);
         return NULL;
@@ -134,7 +148,7 @@ float core_power=0;
 
 long long int page_counter=0;
 //Set this variable to notify if the sims are done
-int expt_done=0;  
+int expt_done=0;
 
 /*Indicates how many config params exist and their types*/
 int config_param=0;
@@ -144,24 +158,211 @@ FILE *vi_file=NULL;
 int *prefixtable; /* For (multi-threaded) MT workloads only */
 
 
-MCache_Entry llc_miss_handler(Addr addr,char optype, Addr instrpc, char is_write,
-                               MCache* L3Cache, long long int *llc_available_cycle, int banknum)
+uns64 sram_install_cnt=0;
+uns64 sram_write_cnt=0;
+uns64 sttram_install_cnt=0;
+uns64 sttram_write_cnt=0;
+
+uns64 llc_install_cnt=0;
+uns64 llc_bypass_cnt=0;
+uns64 llc_bypass_read=0;
+uns64 llc_bypass_write=0;
+
+MCache_Entry llc_miss_handler(Addr addr,char optype, int compressedSize, Addr instrpc, char is_write,
+                              MCache* L3Cache_STTRAM, MCache* L3Cache_SRAM,
+                              long long int *llc_available_cycle, int banknum)
 {
+    bool installed_sram=0;
+    //lookup the cache line in the hash table
+    //Element* elm=insertnode(addr>>6,optype,compressedSize);
     MCache_Entry victim;
 
-    victim = install(L3Cache, addr, instrpc, is_write);  //addr[numc] is byte address here
+    /*if(elm){
+        refetched_cacheline_cnt++;
+		if(elm->is_metadata==1){
+			if(elm->intensity==0)
+				non_intensive++;
+			else if(elm->intensity==1)
+				write_intensive++;
+			else
+				read_intensive++;
+		}
+	}
+    else
+        new_cacheline_cnt++;
+    */
+
+    /*if(hybrid_mode) {
+        if (ME_mode) {
+            int is_write_intensive = 0;
+            int is_llc_friendly = 1;
+
+            //determine whether this cache block is write intensive or read intensive
+            if (elm) {
+                if(elm->wr_intensive)
+                    is_write_intensive = 1;
+                else
+                    is_write_intensive = 0;
+
+                if (elm->access_count == 0)
+                    is_llc_friendly = 0;
+                else
+                    is_llc_friendly = 1;
+            }
+
+            //todo: need to check implementation of ME bypassing mode
+            if(ME_bypassing_mode)
+            {
+                if((is_llc_friendly && elm && elm->is_metadata==1) || compressedSize1Line[numc]>61){
+                    if(is_write_intensive)
+                    {
+                        victim=install(L3Cache_SRAM, addr[numc], instrpc[numc], is_write,compressedSize1Line[numc]);  //addr[numc] is byte address here
+                        installed_sram=1;
+                    }
+                    else
+                    {
+                        victim=install(L3Cache_STTRAM, addr[numc], instrpc[numc], is_write,compressedSize1Line[numc]);  //addr[numc] is byte address here
+                        installed_sram=0;
+                    }
+                    llc_install_cnt++;
+                }
+                else{
+                    llc_bypass_read++;
+                    llc_bypass_cnt++;
+                }
+            }
+            else
+            {
+                if (!elm) //if the cache block is new todo : choose type of llc depend on write & read
+                {
+                    if(!is_write){
+                        victim = install(L3Cache_STTRAM, addr, instrpc, is_write,
+                                         compressedSize);  //addr[numc] is byte address here
+                        installed_sram = 0; // install it into the sttram because the current miss is read miss.
+                    }
+                    else{
+                        victim = install(L3Cache_SRAM, addr, instrpc, is_write,
+                                         compressedSize);  //addr[numc] is byte address here
+                        installed_sram = 1; // install it into the sttram because the current miss is read miss.
+                    }
+
+                }
+                else {
+                   if (elm->is_metadata == 0) // this cache block is refetched cache line, but it does not have metadata
+                    {
+                        metadata_miss_cnt++;
+                        if(!is_write){
+                            victim = install(L3Cache_STTRAM, addr, instrpc, is_write,
+                                             compressedSize);  //addr[numc] is byte address here
+                            installed_sram = 0; // install it into the sttram because the current miss is read miss.
+                        }
+                        else{
+                            victim = install(L3Cache_SRAM, addr, instrpc, is_write,
+                                             compressedSize);  //addr[numc] is byte address here
+                            installed_sram = 1; // install it into the sttram because the current miss is read miss.
+                        }
+
+                    } else // this cache block is refetched cache block, and it has metadata
+                    {
+                        metadata_hit_cnt++;
+                        int install_in_sttram=0;
+                        switch(elm->intensity){
+                            case 0: // no rd_intensive, no wr_intensive
+                                install_in_sttram=false;   //if a line is not read intensive or write intensive (llc unfriendly). store it in sram
+                                break;
+                            case 1: // wr_intensive
+                                install_in_sttram=false;
+                                break;
+                            case 2: // rd_intensive
+                                install_in_sttram=true;
+                                break;
+                        }
+
+                        if (install_in_sttram) {
+                            victim = install(L3Cache_STTRAM, addr, instrpc, is_write,
+                                             compressedSize);  //addr[numc] is byte address here
+                            installed_sram = 0;
+                        } else {
+                            victim = install(L3Cache_SRAM, addr, instrpc, is_write,
+                                             compressedSize);  //addr[numc] is byte address here
+                            installed_sram = 1;
+                        }
+                    }
+                }
+            }
+        }
+        else{//todo depend on is_write choose type of llc
+            if(!is_write){
+                victim = install(L3Cache_STTRAM, addr, instrpc, is_write,
+                                 compressedSize);  //addr[numc] is byte address here
+                installed_sram = 0; // install it into the sttram because the current miss is read miss.
+            }
+            else{
+                victim = install(L3Cache_SRAM, addr, instrpc, is_write,
+                                 compressedSize);  //addr[numc] is byte address here
+                installed_sram = 1; // install it into the sttram because the current miss is read miss.
+            }
+        }
+    }
+    else*/
+    {
+        if(!sttram_mode) {
+            victim = install(L3Cache_SRAM, addr, instrpc, is_write, compressedSize);  //addr[numc] is byte address here
+            installed_sram = 1; //install new cache block in sram
+        }
+        else {
+            victim = install(L3Cache_STTRAM, addr, instrpc, is_write, compressedSize);  //addr[numc] is byte address here
+            installed_sram = 0; //install new cache block in sttmram
+        }
+    }
 
     //determine the write latency and record the available time of the selected bank
     int write_latency=0;
-
-        write_latency = L3_LATENCY_WRITE;
-
-
+    if(installed_sram){
+        write_latency=L3_LATENCY_WRITE_SRAM;
+        sram_install_cnt++;
+    }
+    else
+    {
+        write_latency=L3_LATENCY_WRITE_STTRAM;
+        sttram_install_cnt++;
+    }
     llc_available_cycle[banknum]=CYCLE_VAL+write_latency;
 
     return victim;
 }
 
+//return
+// 0: no rd_intensive, no wr_intensive
+// 1: wr_intensive
+// 2: rd_intensive
+/*int check_intensity(uint64_t wr_cnt, uint64_t rd_cnt)
+{
+    if(wr_cnt==0 && rd_cnt==0) {
+       return 0;
+    }
+    else if((float)wr_cnt/((float)wr_cnt+(float)rd_cnt)>=intensity_threshold)
+        return 1;
+    else
+        return 2;
+}
+void check_table(){
+
+     for(int i=0; i<cl_table->size;i++)
+     {
+         struct ht_node *list = cl_table->list[i];
+         struct ht_node *temp = list;
+         while(temp)
+         {
+			 if(temp->val->pp_changed>0)
+				 pp_changed++;
+			 else
+				 pp_unchanged++;
+
+             temp=temp->next;
+         }
+     }
+}*/
 void victim_block_handler(MCache_Entry victim, int lineoffset, int numc, int ROB_tail){
 
     Addr wb_addr=0;
@@ -169,37 +370,133 @@ void victim_block_handler(MCache_Entry victim, int lineoffset, int numc, int ROB
     //record the property of victim block
     if(victim.valid)
     {
+        /*if(victim.access_count>0)
+            llc_friendly_cacheline++;
+        else
+            llc_unfriendly_cacheline++;
+        */
+
+        //record the number of access count
+        /*Element * elm_victim=lookup(cl_table, victim.tag);
+        elm_victim->access_count=victim.access_count;
+        */
+
+        //check the intensive property of cache block
+        //todo: need to check this part
+        /*int intensity=check_intensity(victim.wr_count,victim.rd_count);
+		if(elm_victim->is_metadata==1){
+        	if(elm_victim->intensity!=intensity){
+				if(intensity==0){
+					if(elm_victim->intensity==1)
+						w_to_n++;
+					if(elm_victim->intensity==2)
+						r_to_n++;
+				}
+				else if(intensity==1){
+					if(elm_victim->intensity==0)
+						n_to_w++;
+					if(elm_victim->intensity==2){
+						r_to_w++;
+						elm_victim->pp_changed++;
+					}
+					G_pp_changed++;
+				}
+				else{
+					if(elm_victim->intensity==0)
+						n_to_r++;
+					if(elm_victim->intensity==1)
+						w_to_r++;
+
+					G_pp_changed++;
+				}
+			}
+        	else{
+            	elm_victim->pp_unchanged++;
+				G_pp_unchanged++;
+			}
+		}
+		else
+			no_metadata++;
+        elm_victim->intensity=intensity;
+        */
+
+        /*
+        if(is_writeintensive(elm_victim->wr_cnt,elm_victim->rd_cnt)){
+            if(elm_victim->wr_intensive==0 && elm_victim->rd_intensive==0)
+                elm_victim->wr_intensive=1;
+            else if(elm_victim->wr_intensive==0 && elm_victim->rd_intensive==1){
+                elm_victim->pp_changed++;
+                elm_victim->rd_intensive=0;
+                elm_victim->wr_intensive=1;
+            }
+            else if(elm_victim->wr_intensive==1 && elm_victim->rd_intensive==0)
+                elm_victim->pp_unchanged++;
+        }
+        else{
+            if(elm_victim->rd_intensive==0 && elm_victim->wr_intensive==0)
+                elm_victim->rd_intensive=1;
+            else if(elm_victim->rd_intensive==0 && elm_victim->wr_intensive==1){
+                elm_victim->pp_changed++;
+                elm_victim->wr_intensive=0;
+                elm_victim->rd_intensive=1;
+            }
+            else if(elm_victim->rd_intensive==1 && elm_victim->wr_intensive==0)
+                elm_victim->pp_unchanged++;
+        }
+        */
+
         //write back a victim block
         if(victim.dirty)
         {
-			access_dirty+=victim.access_count;
+            access_dirty+=victim.access_count;
             victim_dirty++;
             write_traffic++;
             write_traffic_dirty++;
+
+            //  if(victim.comp_size<61) // we will use 15bit as signature and 1bit to store metadata
+            //    elm_victim->is_metadata=1;
 
             wb_addr = victim.tag << lineoffset;
             insert_write(wb_addr, CYCLE_VAL, numc, ROB_tail);
         }else
         {
-			access_clean+=victim.access_count;
+            access_clean+=victim.access_count;
             victim_clean++;
+
+            /*if(ME_mode) {
+                if(clean_write_mode==1) {
+                    if (elm_victim->is_metadata == 0 && victim.comp_size < 61) {
+                        write_traffic++;
+                        write_traffic_clean++;
+                        // we will use 15bit as signature and 1bit to store metadata
+                        elm_victim->is_metadata = 1;
+
+                        wb_addr = victim.tag << lineoffset;
+                        insert_write(wb_addr, CYCLE_VAL, numc, ROB_tail);
+                    }
+                }
+            }*/
         }
+
+        // elm_victim->wr_cnt=0;
+        // elm_victim->rd_cnt=0;
     }
 }
 
 
 int main(int argc, char * argv[])
 {
-    
+
     printf("---------------------------------------------\n");
     printf("-- USIMM: the Utah SImulated Memory Module --\n");
     printf("--              Version: 1.3               --\n");
     printf("---------------------------------------------\n");
-    
+
     int numc=0;
     int num_ret=0;
     int num_fetch=0;
     int num_done=0;
+    //int numch=0;
     int writeqfull=0;
     int fnstart;
     int currMTapp;
@@ -211,34 +508,49 @@ int main(int argc, char * argv[])
     long long int *nonmemops;
     char *opertype;
     long long int *addr;
-	long long int *llc_available_cycle;
-    
+    long long int *llc_available_cycle;
+
     long long int *instrpc;
     int *compressedSize1Line;
     int *compressedSize2Line;
-    
+
+
     int chips_per_rank=-1;
     long long int total_inst_fetched = 0;
     int fragments=1;
-    
+
     //OS parameters
     unsigned long long int os_pages = 2097152; //2 Million pages
     OS_PAGESIZE = 4096; // 4KB is the size of each page
     OS_NUM_RND_TRIES = 4; // Random page mapping
     OS *os;
-    
+
     //Cache Parameters
     MCache *L3Cache; //The L3 Cache model
-    CACHE_SIZE = 8; // 8 MB
-    CACHE_WAYS = 16; // 16 Ways
+    MCache *L3Cache_SRAM; //The L3 Cache model
+    MCache *L3Cache_STTRAM; //The L3 Cache model
+    CACHE_SIZE = 4; // 4 MB
+    CACHE_SIZE_SRAM = 4;  //todo : need to update so that SRAM and STTRAM have difference cache size
+    CACHE_SIZE_STTRAM = 12;  //todo
+    CACHE_WAYS = 8; // 8 Ways
     CACHE_REPL = 0; // Default is LRU
-
-
-
-	CACHE_BANKS=32;
-	L3_LATENCY_READ=20;
-	L3_LATENCY_WRITE=49;
-
+    CACHE_SRAM_WAYS= 8;
+    CACHE_STTRAM_WAYS= 8;
+    COMPRESSION_ENABLED = 0; // 0 by default (not enabled)
+    COMPRESSION_MODE = 0; // 0 by default (no mode)
+    MAX_BLOCKS_PER_LINE = 4; // 4 compressed blocks by default
+    IDEAL_COMPRESSOR_ENABLED = 0; //0 by default (not enabled). if enabled all cacheline will be compressed to 8B.
+    FASTMEM_ENABLED = 0; //0 by default(not enabled). in enabled, the latency of all memory requests is 1.
+    CACHE_BANKS=32;
+    L3_LATENCY_READ=30;
+    L3_LATENCY_WRITE=60;
+    L3_LATENCY_WRITE_SRAM=30;
+    L3_LATENCY_WRITE_STTRAM=60;
+    ME_mode=0;
+    hybrid_mode=0;
+    ME_bypassing_mode=0;
+    clean_write_mode=1;
+    intensity_threshold=0.1;
 
     //To keep track of how much is done
     unsigned long long int inst_comp=0;
@@ -250,26 +562,26 @@ int main(int argc, char * argv[])
         fprintf(stderr,"Need at least one input configuration file and one trace file as argument.  Quitting.\n");
         return -3;
     }
-    
+
     config_param = atoi(argv[1]);
-    
-    
+
+
     config_file = fopen(argv[2], "r");
     if (!config_file) {
         fprintf(stderr,"Missing system configuration file.  Quitting. \n");
         return -4;
     }
-    
+
     NUMCORES = argc-3;
-    
- 	read_config_file(config_file);
-   
+
+    read_config_file(config_file);
+
     ROB = (struct robstructure *)calloc(sizeof(struct robstructure),NUMCORES);
     tif = (gzFile *)malloc(sizeof(gzFile)*NUMCORES);
     committed = (long long int *)calloc(sizeof(long long int),NUMCORES);
-	fetched = (long long int *)calloc(sizeof(long long int),NUMCORES);
+    fetched = (long long int *)calloc(sizeof(long long int),NUMCORES);
     ff_fetched = (long long int *)calloc(sizeof(long long int),NUMCORES);
-	ff_done = (char*)calloc(sizeof(char),NUMCORES);
+    ff_done = (char*)calloc(sizeof(char),NUMCORES);
     time_done = (long long int *)calloc(sizeof(long long int),NUMCORES);
     nonmemops = (long long int *)calloc(sizeof(long long int),NUMCORES);
     opertype = (char *)calloc(sizeof(char),NUMCORES);
@@ -277,13 +589,13 @@ int main(int argc, char * argv[])
     instrpc = (long long int *)calloc(sizeof(long long int),NUMCORES);
     compressedSize1Line = (int *)calloc(sizeof(int),NUMCORES);
     compressedSize2Line = (int *)calloc(sizeof(int),NUMCORES);
-	llc_available_cycle = (long long int *)malloc(sizeof(long long int)*CACHE_BANKS);
-	for(int i=0;i<CACHE_BANKS;i++)
-		llc_available_cycle[i]=0;
-    
+    llc_available_cycle = (long long int *)malloc(sizeof(long long int)*CACHE_BANKS);
+    for(int i=0;i<CACHE_BANKS;i++)
+        llc_available_cycle[i]=0;
+
     prefixtable = (int *)malloc(sizeof(int)*NUMCORES);
     currMTapp = -1;
-    
+
     // add an argument for selecting input traces
     for (numc=0; numc < NUMCORES; numc++) {
         tif[numc] = gzopen(argv[numc+3], "r");
@@ -291,7 +603,7 @@ int main(int argc, char * argv[])
             fprintf(stderr,"Missing input trace file %d.  Quitting. \n",numc);
             return -5;
         }
-        
+
         /* The addresses in each trace are given a prefix that equals
          their core ID.  If the input trace starts with "MT", it is
          assumed to be part of a multi-threaded app.  The addresses
@@ -301,7 +613,7 @@ int main(int argc, char * argv[])
          multi-threaded apps CG (4 threads) and LU (2 threads):
          usimm 1channel.cfg MT0CG MT1CG MT2CG MT3CG MT0LU MT1LU */
         prefixtable[numc] = numc;
-        
+
         /* Find the start of the filename.  It's after the last "/". */
         for (fnstart = strlen(argv[numc+3]) ; fnstart >= 0; fnstart--) {
             if (argv[numc+3][fnstart] == '/') {
@@ -309,7 +621,7 @@ int main(int argc, char * argv[])
             }
         }
         fnstart++;  /* fnstart is either the letter after the last / or the 0th letter. */
-        
+
         if ((strlen(argv[numc+3])-fnstart) > 2) {
             if ((argv[numc+3][fnstart+0] == 'M') && (argv[numc+3][fnstart+1] == 'T')) {
                 if (argv[numc+3][fnstart+2] == '0') {
@@ -326,149 +638,216 @@ int main(int argc, char * argv[])
             }
         }
         printf("Core %d: Input trace file %s : Addresses will have prefix %d\n", numc, argv[numc+3], prefixtable[numc]);
-        
+
         committed[numc]=0;
         fetched[numc]=0;
-		ff_done[numc]=0;
+        ff_done[numc]=0;
         time_done[numc]=0;
         ROB[numc].head=0;
         ROB[numc].tail=0;
         ROB[numc].inflight=0;
         ROB[numc].tracedone=0;
     }
-    
-    
-    
+
+
+
     vi_file = fopen("../input/8Gb_x8.vi", "r");
     chips_per_rank= 8;
     printf("Reading vi file: 8Gb_x8.vi\t\n%d Chips per Rank\n",chips_per_rank);
-    
+
     if (!vi_file) {
         fprintf(stderr,"Missing DRAM chip parameter file.  Quitting. \n");
         return -5;
     }
-    
-    
+
+
     assert((log_base2(NUM_CHANNELS) + log_base2(NUM_RANKS) + log_base2(NUM_BANKS) + log_base2(NUM_ROWS) + log_base2(NUM_COLUMNS) + log_base2(CACHE_LINE_SIZE)) == ADDRESS_BITS );
     read_config_file(vi_file);
     fragments=1;
     T_RFC=T_RFC/fragments;
-    
+
     printf("Fragments: %d of length %d\n",fragments, T_RFC);
-    
+
     print_params();
-    
+
     for(int i=0; i<NUMCORES; i++)
     {
         ROB[i].comptime = (long long int*)calloc(sizeof(long long int),ROBSIZE);
         ROB[i].mem_address = (long long int*)calloc(sizeof(long long int),ROBSIZE);
         ROB[i].instrpc = (long long int*)calloc(sizeof(long long int),ROBSIZE);
         ROB[i].optype = (int*)calloc(sizeof(int),ROBSIZE);
-		ROB[i].issue_time = (long long int*)calloc(sizeof(long long int),ROBSIZE);
+        ROB[i].issue_time = (long long int*)calloc(sizeof(long long int),ROBSIZE);
     }
     long long int cache_size = CACHE_SIZE*1024*1024;//LLC Size (SHARED)
     uns assoc = CACHE_WAYS;
+    uns assoc_sram = CACHE_SRAM_WAYS;
+    uns assoc_sttram = CACHE_STTRAM_WAYS;
     uns block_size = 64;
     uns sets = cache_size/(assoc*block_size);
     uns repl = CACHE_REPL;
 
+    long long int cache_sram_size = CACHE_SIZE_SRAM*1024*1024;//LLC Size (SHARED)
+    uns sets_sram = cache_sram_size/(assoc_sram*block_size);
+
+    long long int cache_sttram_size = CACHE_SIZE_STTRAM*1024*1024;//LLC Size (SHARED)
+    uns sets_sttram = cache_sttram_size/(assoc_sttram*block_size);
+
     L3Cache = (MCache*) calloc(1, sizeof(MCache));
-    init_cache(L3Cache, sets, assoc, repl, block_size);
-    
+    L3Cache_SRAM = (MCache*) calloc(1, sizeof(MCache));
+    L3Cache_STTRAM = (MCache*) calloc(1, sizeof(MCache));
+    init_cache(L3Cache, sets, assoc, repl, block_size, COMPRESSION_ENABLED);
+    init_cache(L3Cache_SRAM, sets_sram, assoc_sram, repl, block_size, COMPRESSION_ENABLED);
+    init_cache(L3Cache_STTRAM, sets_sttram, assoc_sttram, repl, block_size, COMPRESSION_ENABLED);
+
     os_pages =((unsigned long long)1<<ADDRESS_BITS)/OS_PAGESIZE;
-    
+
     printf("os_pages: %lld\n",os_pages);
     os = os_new(os_pages,NUMCORES);
-    
+
     init_memory_controller_vars();
     init_scheduler_vars();
 
 
     cl_table = createTable(HASHTABLE_SIZE);
-    
+
     /* --------------- Done initializing ------------------ */
-    
+
     /* Must start by reading one line of each trace file. */
-	printf("Start Fast Forwarding!!\n");
-	fflush(stdout);
+    printf("Start Fast Forwarding!!\n");
+    fflush(stdout);
     temp_inst_cntr2=0;
     char is_write=0;
     int L3Hit=0;
 
-	while(ff_done_global==0) {
-        for (numc = 0; numc < NUMCORES; numc++) {
-            if (ff_done[numc] == 0 && gzgets(tif[numc], newstr, MAXTRACELINESIZE)) {
+    while(ff_done_global==0)
+    {
+        for(numc=0; numc<NUMCORES; numc++)
+        {
+            if (ff_done[numc]==0&&gzgets(tif[numc],newstr,MAXTRACELINESIZE)) {
                 inst_comp++;
-                if (sscanf(newstr, "%lld %c", &nonmemops[numc], &opertype[numc]) > 0) {
+                if (sscanf(newstr,"%lld %c",&nonmemops[numc],&opertype[numc]) > 0) {
                     if (opertype[numc] == 'R') {
-                        if (sscanf(newstr, "%lld %c %llx %d %d", &nonmemops[numc], &opertype[numc], &addr[numc],
-                                   &compressedSize1Line[numc], &compressedSize2Line[numc]) < 1) {
-                            fprintf(stderr, "[1]Panic.  Poor trace format.%s\n", newstr);
+                        if (sscanf(newstr,"%lld %c %llx %d %d",&nonmemops[numc],&opertype[numc],&addr[numc],&compressedSize1Line[numc],&compressedSize2Line[numc]) < 1) {
+                            fprintf(stderr,"[1]Panic.  Poor trace format.%s\n",newstr);
                             return -4;
                         }
-                    } else {
+                    }
+                    else {
                         if (opertype[numc] == 'W') {
-                            if (sscanf(newstr, "%lld %c %llx %d %d", &nonmemops[numc], &opertype[numc], &addr[numc],
-                                       &compressedSize1Line[numc], &compressedSize2Line[numc]) < 1) {
-                                fprintf(stderr, "[2]Panic.  Poor trace format.%s\n", newstr);
+                            if (sscanf(newstr,"%lld %c %llx %d %d",&nonmemops[numc],&opertype[numc],&addr[numc],&compressedSize1Line[numc],&compressedSize2Line[numc]) < 1) {
+                                fprintf(stderr,"[2]Panic.  Poor trace format.%s\n",newstr);
                                 return -3;
                             }
-                        } else {
-                            fprintf(stderr, "[3]Panic.  Poor trace format.%s\n", newstr);
+                        }
+                        else {
+                            fprintf(stderr,"[3]Panic.  Poor trace format.%s\n",newstr);
                             return -2;
                         }
                     }
 
-                } else {
-                    fprintf(stderr, "[4]Panic.  Poor trace format. %s\n", newstr);
+                }
+                else {
+                    fprintf(stderr,"[4]Panic.  Poor trace format. %s\n",newstr);
                     return -1;
                 }
                 //Insert the OS here to do a Virtual to Physical Translation since we are using a virtual address trace
-                Addr phy_lineaddr = os_v2p_lineaddr(os, addr[numc] >> L3Cache->lineoffset, numc);
-                addr[numc] = phy_lineaddr << (L3Cache->lineoffset);  //convert the line address to byte address
+                Addr phy_lineaddr=os_v2p_lineaddr(os,addr[numc]>>L3Cache->lineoffset,numc);
+                addr[numc]=phy_lineaddr<<(L3Cache->lineoffset);  //convert the line address to byte address
                 if (opertype[numc] == 'R')
-                    is_write = 0;
+                    is_write=0;
                 else
-                    is_write = 1;
+                    is_write=1;
 
                 //fill cache during the fast-forwording
-                L3Hit = isHit(L3Cache, addr[numc], is_write); //addr[numc] is byte address here
-                if (L3Hit == 0) {
-                    MCache_Entry victim = install(L3Cache, addr[numc], instrpc[numc], is_write);  //addr[numc] is byte address here
-                    uns64 addr_tmp = addr[numc] >> 6;
-                    insertnode(addr_tmp, opertype[numc]);
-                }
-                ff_fetched[numc]++;
-                ff_fetched[numc] += nonmemops[numc];
+                MCache_Entry victim;
+                /* if(hybrid_mode)
+                 {
+                     int write_sram=false;
+                     Element* elm=lookup(cl_table, victim.tag);
+                     if(ME_mode)
+                     {
+
+                     }
+                     else {
+                         if (is_write) {
+                             L3Hit = isHit(L3Cache_SRAM, addr[numc], is_write,
+                                           compressedSize1Line[numc]); //addr[numc] is byte address here
+                             if (L3Hit == 0)
+                                 victim = install(L3Cache_SRAM, addr[numc], instrpc[numc], is_write,
+                                                  compressedSize1Line[numc]);  //addr[numc] is byte address here
+                         } else {
+                             L3Hit = isHit(L3Cache_STTRAM, addr[numc], is_write,
+                                           compressedSize1Line[numc]); //addr[numc] is byte address here
+                             if (L3Hit == 0)
+                                 victim = install(L3Cache_STTRAM, addr[numc], instrpc[numc], is_write,
+                                                  compressedSize1Line[numc]);  //addr[numc] is byte address here
+                         }
+                     }
+                 }
+                 else{*/
+                L3Hit = isHit(L3Cache, addr[numc], is_write,
+                              compressedSize1Line[numc]); //addr[numc] is byte address here
+
+                if (L3Hit == 0)
+                    victim = install(L3Cache, addr[numc], instrpc[numc], is_write,
+                                     compressedSize1Line[numc]);  //addr[numc] is byte address here
+
+                // }
+                uns64 addr_tmp=addr[numc]>>6;
+                insertnode(addr_tmp, opertype[numc],compressedSize1Line[numc]);
+
+                //update access history in the hash table
+                /* if(L3Hit==0 && victim.valid)
+                 {
+                     Element* elm=lookup(cl_table, victim.tag);
+                     if(elm) {
+                          elm->intensity=check_intensity(victim.wr_count, victim.rd_count);
+                         if (victim.comp_size < 61) {
+                             elm->access_count = victim.access_count;
+                             if(victim.dirty)
+                                 elm->is_metadata=1;
+                         }
+                     }else
+                         assert(elm);
+                 }*/
+            }
+            else {
+                //gzrewind(tif[numc]);
+                //printf("rewind for core %d\n", numc);
+            }
 
 
-                if (ff_done[numc] == 0 && ff_fetched[numc] > FF_INST) {
-                    printf("[FF Phase] Core:%d, ff done, fetched instruction:%lld\n", numc, ff_fetched[numc]);
-                    fflush(stdout);
+            ff_fetched[numc]++;
+            ff_fetched[numc]+=nonmemops[numc];
 
-                    ff_done[numc] = 1;
-                    int ff_done_cnt = 0;
-                    for (int i = 0; i < NUMCORES; i++)
-                        if (ff_done[i] == 1)
-                            ff_done_cnt++;
 
-                    if (ff_done_cnt == NUMCORES)
-                        ff_done_global = 1;
-                    else
-                        ff_done_global = 0;
-                }
+            if(ff_done[numc]==0 && ff_fetched[numc]>FF_INST)
+            {
+                printf("[FF Phase] Core:%d, ff done, fetched instruction:%lld\n",numc,ff_fetched[numc]);
+                fflush(stdout);
+
+                ff_done[numc]=1;
+                int ff_done_cnt=0;
+                for(int i=0;i<NUMCORES;i++)
+                    if(ff_done[i]==1)
+                        ff_done_cnt++;
+
+                if(ff_done_cnt==NUMCORES)
+                    ff_done_global=1;
+                else
+                    ff_done_global=0;
             }
         }
     }
 
     //print_cache_stats(L3Cache);
-    
+
     printf("Starting simulation.\n");
-	fflush(stdout);
+    fflush(stdout);
     temp_inst_cntr2=0;
 
     while (!expt_done) {
-        
+
         /* For each core, retire instructions if they have finished. */
         for (numc = 0; numc < NUMCORES; numc++) {
             num_ret = 0;
@@ -480,22 +859,22 @@ int main(int argc, char * argv[])
                     ROB[numc].inflight--;
                     committed[numc]++;
                     num_ret++;
-					if(ROB[numc].optype[ROB[numc].head] == 'R'){
-						access_sum += ROB[numc].comptime[ROB[numc].head] - ROB[numc].issue_time[ROB[numc].head];
-						num_ret_read++;
-					}
+                    if(ROB[numc].optype[ROB[numc].head] == 'R'){
+                        access_sum += ROB[numc].comptime[ROB[numc].head] - ROB[numc].issue_time[ROB[numc].head];
+                        num_ret_read++;
+                    }
                 }
                 else  /* Instruction not complete.  Stop retirement for this core. */
                     break;
             }  /* End of while loop that is retiring instruction for one core. */
         }  /* End of for loop that is retiring instructions for all cores. */
-        
-        
+
+
         if(CYCLE_VAL%PROCESSOR_CLK_MULTIPLIER == 0)
         {
             /* Execute function to find ready instructions. */
             update_memory();
-            
+
             /* Execute user-provided function to select ready instructions for issue. */
             /* Based on this selection, update DRAM data structures and set
              instruction completion times. */
@@ -505,7 +884,7 @@ int main(int argc, char * argv[])
                 gather_stats(c);
             }
         }
-        
+
         /* For each core, bring in new instructions from the trace file to
          fill up the ROB. */
         writeqfull =0;
@@ -516,7 +895,7 @@ int main(int argc, char * argv[])
                 break;
             }
         }
-        
+
         for (numc = 0; numc < NUMCORES; numc++) {
             if (!ROB[numc].tracedone) { /* Try to fetch if EOF has not been encountered. */
                 num_fetch = 0;
@@ -524,7 +903,7 @@ int main(int argc, char * argv[])
                     /* Keep fetching until fetch width or ROB capacity or WriteQ are fully consumed. */
                     /* Read the corresponding trace file and populate the tail of the ROB data structure. */
                     /* If Memop, then populate read/write queue.  Set up completion time. */
-                    
+
                     if (nonmemops[numc]) {  /* Have some non-memory-ops to consume. */
                         ROB[numc].optype[ROB[numc].tail] = 'N';
                         ROB[numc].comptime[ROB[numc].tail] = CYCLE_VAL+PIPELINEDEPTH;
@@ -538,40 +917,61 @@ int main(int argc, char * argv[])
                     else{ /* Done consuming non-memory-ops.  Must now consume the memory rd or wr. */
 
                         //determine the bank number
-						int banknum =  (addr[numc]>>6)%CACHE_BANKS;
+                        int banknum =  (addr[numc]>>6)%CACHE_BANKS;
 
-						//check if a bank is available for the current cache access
-						if(llc_available_cycle[banknum]> CYCLE_VAL)
-							break;
+                        //check if a bank is available for the current cache access
+                        if(llc_available_cycle[banknum]> CYCLE_VAL)
+                            break;
 
-						//read
-                        if (opertype[numc] == 'R') 
+                        //read
+                        if (opertype[numc] == 'R')
                         {
                             ROB[numc].mem_address[ROB[numc].tail] = addr[numc];
                             ROB[numc].optype[ROB[numc].tail] = opertype[numc];
                             ROB[numc].comptime[ROB[numc].tail] = CYCLE_VAL + BIGNUM;
                             ROB[numc].instrpc[ROB[numc].tail] = instrpc[numc];
-							ROB[numc].issue_time[ROB[numc].tail] = CYCLE_VAL;
+                            ROB[numc].issue_time[ROB[numc].tail] = CYCLE_VAL;
 
                             int L3Hit = 0;
 
                             llc_read_access++;
                             //access cache
+                            /*if(hybrid_mode)
+                            {
+                                L3Hit = isHit(L3Cache_SRAM, addr[numc], false, compressedSize1Line[numc]); //addr[numc] is byte address here
+                                if(!L3Hit) {
+                                    L3Hit = isHit(L3Cache_STTRAM, addr[numc], false, compressedSize1Line[numc]); //addr[numc] is byte address here
+                                    if(L3Hit)//sttram hit
+                                        sttram_read_hit++;
+                                }
+                                else//sram hit
+                                    sram_read_hit++;
+                            }
+                            else */
+                            {
+                                if(sttram_mode) {
+                                    sttram_read_hit++;
+                                    L3Hit = isHit(L3Cache_STTRAM, addr[numc], false,
+                                                  compressedSize1Line[numc]); //addr[numc] is byte address here
+                                }else {
+                                    sram_read_hit++;
+                                    L3Hit = isHit(L3Cache_SRAM, addr[numc], false,
+                                                  compressedSize1Line[numc]); //addr[numc] is byte address here
+                                }
+                            }
 
-                            L3Hit = isHit(L3Cache, addr[numc], false); //addr[numc] is byte address here
-
-							// Cache hit
-							if(L3Hit==1)
+                            // Cache hit
+                            if(L3Hit==1)
                             {
                                 llc_available_cycle[banknum] = CYCLE_VAL+L3_LATENCY_READ;
                                 ROB[numc].comptime[ROB[numc].tail] = CYCLE_VAL+L3_LATENCY_READ+PIPELINEDEPTH;
                             }
-							else // Cache miss
+                            else // Cache miss
                             {
                                 llc_read_miss++;
-							    //update LLC
-                                MCache_Entry victim = llc_miss_handler(addr[numc],opertype[numc],
-                                                 instrpc[numc],false,L3Cache,llc_available_cycle,banknum);
+                                //update LLC
+                                MCache_Entry victim = llc_miss_handler(addr[numc],opertype[numc],compressedSize1Line[numc],
+                                                                       instrpc[numc],false,L3Cache_STTRAM,L3Cache_SRAM,llc_available_cycle,banknum);
 
                                 //handling victim block
                                 victim_block_handler(victim, L3Cache->lineoffset, numc, ROB[numc].tail);
@@ -593,36 +993,80 @@ int main(int argc, char * argv[])
                                 }
                             }
                         }
-                        // write
+                            // write
                         else{  /* This must be a 'W'.  We are confirming that while reading the trace. */
-                            if (opertype[numc] == 'W') 
+                            if (opertype[numc] == 'W')
                             {
                                 ROB[numc].mem_address[ROB[numc].tail] = addr[numc];
                                 ROB[numc].optype[ROB[numc].tail] = opertype[numc];
                                 ROB[numc].comptime[ROB[numc].tail] = CYCLE_VAL+PIPELINEDEPTH;
                                 /* Also, add this to the write queue. */
+
                                 int L3Hit=0;
+                                int is_hit_sram=0;
                                 llc_write_access++;
-                                L3Hit = isHit(L3Cache, addr[numc], true); //addr[numc] is byte address here
-                                // todo: proactively invalidate a dead block
+
+                                /*if(hybrid_mode)
+                                {
+                                    L3Hit = isHit(L3Cache_SRAM, addr[numc], true, compressedSize1Line[numc]); //addr[numc] is byte address here
+                                    if(!L3Hit)
+                                    {
+                                        L3Hit = isHit(L3Cache_STTRAM, addr[numc], true, compressedSize1Line[numc]); //addr[numc] is byte address here
+                                        is_hit_sram=0;
+                                        if(L3Hit)
+                                            sttram_write_hit++;
+                                    }
+                                    else {
+                                        is_hit_sram = 1;
+                                        sram_write_hit++;
+                                    }
+                                }
+                                else*/
+                                {
+                                    if(sttram_mode) {
+                                        sttram_write_hit++;
+                                        L3Hit = isHit(L3Cache_STTRAM, addr[numc], true,
+                                                      compressedSize1Line[numc]); //addr[numc] is byte address here
+                                        //todo: proactively invalidate a dead block
+                                        is_hit_sram=0;
+                                    }
+                                    else
+                                    {
+                                        sram_write_hit++;
+                                        L3Hit = isHit(L3Cache_SRAM, addr[numc], true,
+                                                      compressedSize1Line[numc]); //addr[numc] is byte address here
+                                        is_hit_sram = 1;
+                                    }
+                                }
+
                                 if(L3Hit==1){
-                                    llc_available_cycle[banknum]=CYCLE_VAL+L3_LATENCY_WRITE;
-
-                                        //invalid deadblock (lru block for now)
-                                        //invalid_deadblock();
-
+                                    if(is_hit_sram)
+                                    {
+                                        llc_available_cycle[banknum]=CYCLE_VAL+L3_LATENCY_WRITE_SRAM;
+                                        sram_write_cnt++;
+                                    }
+                                    else
+                                    {
+                                        sttram_write_cnt++;
+                                        llc_available_cycle[banknum]=CYCLE_VAL+L3_LATENCY_WRITE_STTRAM;
+                                    }
                                 }
                                 else if(L3Hit == 0) {
                                     llc_write_miss++;
                                     //update LLC
                                     MCache_Entry victim = llc_miss_handler(addr[numc], opertype[numc],
-                                                                           instrpc[numc], true, L3Cache, llc_available_cycle, banknum);
+                                                                           compressedSize1Line[numc],
+                                                                           instrpc[numc], true, L3Cache_STTRAM,
+                                                                           L3Cache_SRAM, llc_available_cycle, banknum);
                                     //handing victim block
                                     victim_block_handler(victim, L3Cache->lineoffset,numc, ROB[numc].tail);
+
+
                                     // Check to see if the read is for buffered data in write queue -
                                     // return constant latency if match in WQ
                                     // add in read queue otherwise
                                     int lat = read_matches_write_or_read_queue(addr[numc]);
+
                                     // Check to see if the read is for buffered data in write queue -
                                     // return constant latency if match in WQ
                                     // add in read queue otherwise
@@ -640,12 +1084,15 @@ int main(int argc, char * argv[])
                             }
                         }
 
+
+
+                        //insertnode(item,opertype[numc]);
                         ROB[numc].tail = (ROB[numc].tail +1) % ROBSIZE;
                         ROB[numc].inflight++;
                         fetched[numc]++;
                         temp_inst_cntr++;
                         num_fetch++;
-                        
+
                         /* Done consuming one line of the trace file.  Read in the next. */
                         if (gzgets(tif[numc],newstr,MAXTRACELINESIZE)) {
                             inst_comp++;
@@ -679,11 +1126,11 @@ int main(int argc, char * argv[])
                             addr[numc]=phy_lineaddr<<L3Cache->lineoffset;
                         }
                         else {
-                        	gzrewind(tif[numc]);
+                            gzrewind(tif[numc]);
                         }
-                        
+
                     }  /* Done consuming the next rd or wr. */
-                    
+
                 } /* One iteration of the fetch while loop done. */
                 if((fetched[numc] >= MAX_INST) && (time_done[numc] == 0)){
                     num_done++;
@@ -691,8 +1138,8 @@ int main(int argc, char * argv[])
                 }
             } /* Closing brace for if(trace not done). */
         } /* End of for loop that goes through all cores. */
-        
-        
+
+
         if (num_done == NUMCORES) {
             expt_done = 1;
         }
@@ -704,13 +1151,13 @@ int main(int argc, char * argv[])
             fflush(stdout);
             printf(".");
             printf(" - %lld00Million Instructions\n", fetched[0]/100000000);
-			fflush(stdout);
+            fflush(stdout);
             temp_inst_cntr=0;
         }
     }
-    
+
     fprintf(stderr,"sim exit!\n");
-    
+
     /* Code to make sure that the write queue drain time is included in
      the execution time of the thread that finishes last. */
     maxtd = time_done[0];
@@ -722,7 +1169,7 @@ int main(int argc, char * argv[])
         }
     }
     time_done[maxcr] = CYCLE_VAL;
-    
+
     core_power = 0;
     for (numc=0; numc < NUMCORES; numc++) {
         /* A core has peak power of 10 W in a 4-channel config.  Peak power is consumed while the thread is running, else the core is perfectly power gated. */
@@ -732,12 +1179,12 @@ int main(int argc, char * argv[])
         /* The core is more energy-efficient in our single-channel configuration. */
         core_power = core_power/2.0 ;
     }
-    
-	
+
+
     printf("Done with loop. Printing stats.\n");
     printf("Cycles %lld\n", CYCLE_VAL);
     total_time_done = 0;
-    
+
     for (numc=0; numc < NUMCORES; numc++) {
         printf("Done: Core %d: Fetched %lld : Committed %lld : At time : %lld\n", numc, fetched[numc], committed[numc], time_done[numc]);
         total_time_done += time_done[numc];
@@ -757,8 +1204,17 @@ int main(int argc, char * argv[])
     printf("\nUSIMM_MEM_WRITES_DIRTY      \t : %lld\n",write_traffic_dirty);
     printf("\nUSIMM_MEM_WRITES_CLEAN      \t : %lld\n",write_traffic_clean);
     printf("\nUSIMM_MEM_TRAFFIC     \t : %lld\n",read_traffic+write_traffic_dirty+write_traffic_clean);
-    
-    
+
+    printf("\nSRAM_INSTALL_COUNT     \t : %lld\n",sram_install_cnt);
+    printf("\nSTTRAM_INSTALL_COUNT     \t : %lld\n",sttram_install_cnt);
+    printf("\nSRAM_WRITE_COUNT     \t : %lld\n",sram_write_cnt);
+    printf("\nSTTRAM_WRITE_COUNT     \t : %lld\n",sttram_write_cnt);
+
+    printf("\nLLC_BYPASS_COUNT    \t : %lld\n",llc_bypass_cnt);
+    printf("\nTOBY_RD_WR %lld\t%lld\t%lld\n",llc_bypass_cnt,llc_bypass_read,llc_bypass_write);
+    printf("\nLLC_INSTALL_COUNT     \t : %lld\n",llc_install_cnt);
+
+
     printf("\n\n ---- Per-Core Stat ---- \n");
     //Per core stat
     for (numc=0; numc < NUMCORES; numc++) {
@@ -766,35 +1222,36 @@ int main(int argc, char * argv[])
         printf("\nCORE%d_CYCLES          \t : %lld\n",numc,CYCLE_VAL);
         printf("\nCORE%d_IPC             \t : %f\n",numc,((double)fetched[numc])/CYCLE_VAL);
     }
-    
+
     /* Print all other memory system stats. */
     scheduler_stats();
     //print_cache_stats(L3Cache);
 
-
-    printf("L3Cache statistics\n");
-    print_cache_stats(L3Cache);
+    printf("L3Cache_SRAM statistics\n");
+    print_cache_stats(L3Cache_SRAM);
+    printf("L3Cache_STTRAM statistics\n");
+    print_cache_stats(L3Cache_STTRAM);
 
     print_stats();
     os_print_stats(os);
-    
+
     /*Print Cycle Stats*/
     for(int c=0; c<NUM_CHANNELS; c++)
         for(int r=0; r<NUM_RANKS ;r++)
             calculate_power(c,r,0,chips_per_rank);
-    
+
     printf ("\n#-------------------------------------- Power Stats ----------------------------------------------\n");
     printf ("Note:  1. termRoth/termWoth is the power dissipated in the ODT resistors when Read/Writes terminate \n");
     printf ("          in other ranks on the same channel\n");
     printf ("#-------------------------------------------------------------------------------------------------\n\n");
-    
-    
+
+
     /*Print Power Stats*/
     float total_system_power =0;
     for(int c=0; c<NUM_CHANNELS; c++)
         for(int r=0; r<NUM_RANKS ;r++)
             total_system_power += calculate_power(c,r,1,chips_per_rank);
-    
+
     printf ("\n#-------------------------------------------------------------------------------------------------\n");
     if (NUM_CHANNELS == 4) {  /* Assuming that this is 4channel.cfg  */
         printf ("Total memory system power = %f W\n",total_system_power/1000);
@@ -811,33 +1268,44 @@ int main(int argc, char * argv[])
         printf("Energy Delay product (EDP) = %2.9f J.s\n", (10 + core_power + total_system_power/1000)*(float)((double)CYCLE_VAL/(double)3200000000) * (float)((double)CYCLE_VAL/(double)3200000000));
     }
     printf ("\n#--------------------------------- result of read&write count ------------------------------------\n");
-    
+
     //printnode();
     destroyTable(cl_table);
-	printf("REFETCH NEW %lld %lld\n",refetched_cacheline_cnt,new_cacheline_cnt);
-	printf("DIRTY CLEAN %lld %lld\n",victim_dirty,victim_clean);
-	printf("AVERAGE_HIT %.2f %.2f\n",(double)access_dirty/(double)victim_dirty,(double)access_clean/(double)victim_clean);
-	printf("TT_R_WD_WC %lld\t%lld\t%lld\t%lld\n",read_traffic+write_traffic_dirty+write_traffic_clean,read_traffic,write_traffic_dirty,write_traffic_clean);
+    printf("FRIENDLY UNFRIENDLY %lld %lld\n",llc_friendly_cacheline,llc_unfriendly_cacheline);
+    printf("REFETCH NEW %lld %lld\n",refetched_cacheline_cnt,new_cacheline_cnt);
+    printf("DIRTY CLEAN %lld %lld\n",victim_dirty,victim_clean);
+    printf("AVERAGE_HIT %.2f %.2f\n",(double)access_dirty/(double)victim_dirty,(double)access_clean/(double)victim_clean);
+    printf("TT_R_WD_WC %lld\t%lld\t%lld\t%lld\n",read_traffic+write_traffic_dirty+write_traffic_clean,read_traffic,write_traffic_dirty,write_traffic_clean);
 
-	printf("MISS_TYPE %lld\t%lld\t%lld\t%lld\n",llc_read_miss,llc_write_miss,llc_read_access,llc_write_access);
-
-    printf("LLC_READ_MISS： %lld\n",llc_read_miss);
-    printf("LLC_WRITE_MISS： %lld\n",llc_write_miss);
-    printf("LLC_READ_ACCESS： %lld\n",llc_read_access);
-    printf("LLC_WRITE_ACCESS： %lld\n",llc_write_access);
+    printf("HIT_TYPE %lld\t%lld\t%lld\t%lld\n",sram_read_hit,sttram_read_hit,sram_write_hit,sttram_write_hit);
+    printf("MISS_TYPE %lld\t%lld\t%lld\t%lld\n",llc_read_miss,llc_write_miss,llc_read_access,llc_write_access);
 
 
-	//check_table();
-	printf("PP_CHANGE %lld\t%lld\n",pp_changed,pp_unchanged);
-	printf("SPECIFIC_pp_change %lld\t%lld\t%lld\t%lld\t%lld\t%lld\n",n_to_w,n_to_r,w_to_n,w_to_r,r_to_n,r_to_w);
-	
-	printf("AVERAGE_ACCESS_TIME %f\n", (double)access_sum/(double)num_ret);
+    printf("METADATA HIT %lld\n",metadata_hit_cnt);
+    printf("METADATA MISS %lld\n",metadata_miss_cnt);
+
+    printf("LLC_SRAM_READ_HIT %lld\n",sram_read_hit);
+    printf("LLC_STTRAM_READ_HIT %lld\n",sttram_read_hit);
+    printf("LLC_SRAM_WRITE_HIT %lld\n",sram_write_hit);
+    printf("LLC_STTRAM_WRITE_HIT %lld\n",sttram_write_hit);
+
+    printf("LLC_READ_MISS %lld\n",llc_read_miss);
+    printf("LLC_WRITE_MISS %lld\n",llc_write_miss);
+    printf("LLC_READ_ACCESS %lld\n",llc_read_access);
+    printf("LLC_WRITE_ACCESS %lld\n",llc_write_access);
+
+    //check_table();
+    printf("INTENSITY %lld\t%lld\t%lld\n",write_intensive,read_intensive,non_intensive);
+    printf("PP_CHANGE %lld\t%lld\n",pp_changed,pp_unchanged);
+    printf("SPECIFIC_pp_change %lld\t%lld\t%lld\t%lld\t%lld\t%lld\n",n_to_w,n_to_r,w_to_n,w_to_r,r_to_n,r_to_w);
+
+    printf("AVERAGE_ACCESS_TIME %f\n", (double)access_sum/(double)num_ret);
 
 
     //Freeing all used memory
     for(int i = 0; i < NUMCORES; i++){
         //fclose(tif[i]);
-		gzclose(tif[i]);
+        gzclose(tif[i]);
         free(ROB[i].comptime);
         free(ROB[i].mem_address);
         free(ROB[i].instrpc);
@@ -848,7 +1316,7 @@ int main(int argc, char * argv[])
     free(committed);
     free(fetched);
     free(ff_fetched);
-	free(ff_done);
+    free(ff_done);
     free(time_done);
     free(nonmemops);
     free(opertype);
