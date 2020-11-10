@@ -10,11 +10,10 @@
 #include <string.h>
 
 
-void init_cache(MCache* c, uns sets, uns assocs, uns repl_policy, uns linesize, int compression_enabled)
+void init_cache(MCache* c, uns sets, uns assocs, uns repl_policy, uns linesize)
 {
     c->sets    = sets;
     c->assocs  = assocs;
-    
     c->linesize = linesize;
     c->lineoffset=log2(linesize);
     c->repl_policy = (MCache_ReplPolicy)repl_policy;
@@ -25,12 +24,10 @@ void init_cache(MCache* c, uns sets, uns assocs, uns repl_policy, uns linesize, 
     //for drrip or dip
     mcache_select_leader_sets(c,sets);
     c->psel=(MCACHE_PSEL_MAX+1)/2;
-    
-    //for compression
-    c->compression_enabled = compression_enabled;
+
 }
 
-int isHit(MCache *c, Addr addr, Flag is_write, uns comp_size)
+int isHit(MCache *c, Addr addr, Flag is_write)
 {
     Addr tag = addr;
     int isHit = 0;
@@ -45,31 +42,11 @@ int isHit(MCache *c, Addr addr, Flag is_write, uns comp_size)
     return isHit;
 }
 
-MCache_Entry install(MCache *c, Addr addr, Addr pc, Flag is_write, uns comp_size)
+MCache_Entry install(MCache *c, Addr addr, Addr pc, Flag is_write)
 {
     Addr tag = addr;
     MCache_Entry victim;
-    
-    c->compression_index[comp_size-1]++;
-    
-    if(comp_size<=16){
-        c->compression_16++;
-    }
-    else if(comp_size<=32){
-        c->compression_32++;
-    }
-    else if(comp_size<=48){
-        c->compression_48++;
-    }
-	else if(comp_size<=61){
-		c->compression_61++;
-	}
-    else{
-        c->compression_64++;
-    }
-    
-    c->compression_accesses++;
-    
+
     //Initialize the victim
     victim.valid = FALSE;
     victim.dirty = FALSE;
@@ -77,9 +54,9 @@ MCache_Entry install(MCache *c, Addr addr, Addr pc, Flag is_write, uns comp_size
     victim.pc = 0;
     victim.ripctr = 0;
     victim.last_access = 0;
-    victim.comp_size=0;
+
     
-    victim = mcache_install(c,tag,pc,is_write,comp_size);
+    victim = mcache_install(c,tag,pc,is_write);
     return victim;
 }
 ////////////////////////////////////////////////////////////////////
@@ -128,9 +105,6 @@ int mcache_access(MCache *c, Addr addr, Flag dirty)
             entry->last_access  = c->s_count;
             entry->ripctr       = MCACHE_SRRIP_MAX;
 			entry->access_count++;
-
-			if(dirty) entry->wr_count++;
-			else entry->rd_count++;
 
             c->touched_wayid = (ii-start);
             c->touched_setid = set;
@@ -236,31 +210,9 @@ Flag mcache_mark_dirty    (MCache *c, Addr tag)
     
     return FALSE;
 }
-
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
-Flag mcache_mark_dead    (MCache *c, Addr tag)
-{
-    //uns64 offset = c->lineoffset;
-    uns   set  = mcache_get_index(c,tag);
-    uns   start = set * c->assocs;
-    uns   end   = start + c->assocs;
-    uns   ii;
-
-    for (ii=start; ii<end; ii++){
-        MCache_Entry *entry = &c->entries[ii];
-        if(entry->valid && (entry->tag == tag))
-        {
-            entry->dirty = TRUE;
-            return TRUE;
-        }
-    }
-
-    return FALSE;
-}
-////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////
-MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty, uns comp_size)
+MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty)
 {
     uns64 offset = c->lineoffset;
     Addr  tag  = addr>>offset; // full tags
@@ -307,12 +259,9 @@ MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty, uns comp_
     //put new information in
     entry->tag   = tag;
     entry->valid = TRUE;
-    entry->dead  = 0;
+   // entry->dead  = 0;
     entry->pc    = pc;
 	entry->access_count =0;
-	entry->wr_count=0;
-	entry->rd_count=0;
-	entry->comp_size=comp_size;
 
     if(dirty==TRUE)
         entry->dirty=TRUE;
@@ -448,52 +397,16 @@ uns mcache_find_victim_lru (MCache *c,  uns set)
     uns end   = start + c->assocs;
     uns lowest=start;
     uns ii;
-    uns victim_idx;
-    flag found = 0;
 
-    /*if (cache_type == IS_LLC ) {
-            if (block[set][way].valid){
-                uncore.LLC.LATENCY = high_llc_write_latency;
-                slow_write_cnt++;
-                fill_not_invalid_cnt++;
 
-                // invalid dead block in the set first
-                for(uint8_t i=0; i<NUM_WAY; i++) {
-                    if (block[set][i].lru == NUM_WAY - 2) {
-                        block[set][i].dead = 1;
-                        block[set][i].valid = 0;
-                    }
-                }
-            }
-            else{
-                uncore.LLC.LATENCY = low_llc_write_latency;
-                fast_write_cnt++;
-                fill_invalid_cnt++;
-            }
-        }
-        */
-   for (ii=start; ii<end; ii++){
-       MCache_Entry *entry = &c->entries[ii];
-       if (entry->dead){
-           found = 1;
-           victim_idx = ii;
-       }
-   }
-    //proactively invalidate a dead block
-    if(!found){
-        for (ii = start; ii < end; ii++){
-            //select an invalid block as the victim first
-            if (c->entries[ii].last_access < c->entries[lowest].last_access){
-                lowest = ii;
-                victim_idx=ii;
-                entry->dead = 1;
-            }
+    for (ii = start; ii < end; ii++){
+        if (c->entries[ii].last_access < c->entries[lowest].last_access){
+            lowest = ii;
         }
     }
 
-    return victim_idx;
+    return lowest;
 }
-
 ////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////
 
@@ -581,7 +494,7 @@ void print_cache_stats(MCache * llcache){
     printf("\tLineSize:       %dB\n", llcache->linesize);
     printf("\tAssociativity:  %d\n", llcache->assocs);
     printf("\tTotalSets:      %d\n", llcache->sets);
-    printf("\tCompressEnable: %d\n", llcache->compression_enabled);
+
     
     printf("Cache Statistics: \n\n");
     totLookups=llcache->s_count;
@@ -595,33 +508,5 @@ void print_cache_stats(MCache * llcache){
         printf("Overall_Misses :   %lld\n", totMisses);
         printf("Overall_Hits :     %lld\n", totHits);
         printf("Overall_MissRate \t : %5f\n\n", ((double)totMisses/(double)totLookups)*100.0);
-        
-        printf("Cacheline Size Broad Distribution : \n\n");
-        printf("16ByteBlock \t : %5f\n\n", ((double)llcache->compression_16/(double)llcache->compression_accesses)*100.0);
-        printf("32ByteBlock \t : %5f\n\n", ((double)llcache->compression_32/(double)llcache->compression_accesses)*100.0);
-        printf("48ByteBlock \t : %5f\n\n", ((double)llcache->compression_48/(double)llcache->compression_accesses)*100.0);
-        printf("61ByteBlock \t : %5f\n\n", ((double)llcache->compression_61/(double)llcache->compression_accesses)*100.0);
-        printf("64ByteBlock \t : %5f\n\n", ((double)llcache->compression_64/(double)llcache->compression_accesses)*100.0);
-        
-        printf("Cache Compression Statistics : \n\n");
-        for(int hh = 1; hh <= 4; hh++)
-        {
-            printf("%dBLOCK_CAPACITY_MB :     %f\n",hh, hh*(((double)(llcache->s_sblock_aggr[hh]))/llcache->s_sblock_called)*64/(1024*1024));
-            aggregate_lines += (hh*llcache->s_sblock_aggr[hh]);
-        }
-        printf("\nTOTAL_CAPACITY_MB :     %f\n\n\n", ((double)aggregate_lines*64)/(llcache->s_sblock_called*1024*1024));
-        for(int hh = 1; hh <= 4; hh++)
-        {
-            printf("%dBLOCK_PERCENT :     %f\n",hh, hh*((double)(llcache->s_sblock_aggr[hh]))/aggregate_lines);
-        }
-        
-        printf("Cache Compression Distribution : \n\n");
-        for(int hh = 0; hh < 64; hh++)
-        {
-            printf("%dByte_Block :     %llu\n", hh+1, llcache->compression_index[hh]);
-            aggregate_block_size += ((hh+1)*(llcache->compression_index[hh]));
-            aggregate_block_index += llcache->compression_index[hh];
-        }
-        printf("\n\nAvg_Block_Bytes :     %f\n\n\n", ((double)aggregate_block_size)/aggregate_block_index);
     }
 }

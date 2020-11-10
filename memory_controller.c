@@ -371,7 +371,6 @@ int write_exists_in_write_queue(long long int physical_address)
 // Insert a new read to the read queue
 request_t * insert_read(long long int physical_address, long long int arrival_time, int thread_id, int instruction_id, long long int instruction_pc)
 {
-
 	optype_t this_op = READ;
 
 	//get channel info

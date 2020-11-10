@@ -27,7 +27,7 @@ typedef struct MCache_Entry {
     Addr tag;
     //For Random Compression Algorithm
     Addr tag_rand[4];
-    
+    Addr address;
     Addr pc;
     uns ripctr;
     uns64 last_access;
@@ -94,29 +94,18 @@ typedef struct MCache {
     int touched_setid;
     int touched_lineid;
     
-    //Compression Related Parameters
-    int compression_enabled;
-    int compression_mode;
-    int max_blocks_per_line;
-    uns64 compression_index[64];
-    
-    uns64 compression_16;
-    uns64 compression_32;
-    uns64 compression_48;
-	uns64 compression_61;
-    uns64 compression_64;
-    uns64 compression_accesses;
+
 } MCache;
 
 
-void init_cache(MCache* c, uns sets, uns assocs, uns repl, uns block_size, int compression_enabled);
+void init_cache(MCache* c, uns sets, uns assocs, uns repl, uns block_size);
 
-int isHit(MCache* c, Addr addr, Flag dirty, uns comp_size);
+int isHit(MCache* c, Addr addr, Flag dirty);
 
 
-MCache_Entry install(MCache* c, Addr addr, Addr pc, Flag dirty, uns comp_size);
+MCache_Entry install(MCache* c, Addr addr, Addr pc, Flag dirty);
 
-MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty, uns comp_size);
+MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty);
 
 
 void mcache_new(MCache* c, uns sets, uns assocs, uns linesize, uns repl);
