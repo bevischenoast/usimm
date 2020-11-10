@@ -15,7 +15,7 @@ typedef enum {
     max_retire_token,
     max_fetch_token,
     pipelinedepth_token,
-    
+
     num_channels_token,
     num_ranks_token,
     num_banks_token,
@@ -23,7 +23,7 @@ typedef enum {
     num_columns_token,
     cache_line_size_token,
     address_bits_token,
-    
+
     dram_clk_frequency_token,
     t_rcd_token,
     t_rp_token,
@@ -44,7 +44,7 @@ typedef enum {
     t_xp_token,
     t_xp_dll_token,
     t_data_trans_token,
-    
+
     vdd_token,
     idd0_token,
     idd2p0_token,
@@ -55,34 +55,43 @@ typedef enum {
     idd4r_token,
     idd4w_token,
     idd5_token,
-    
+
     wq_capacity_token,
     address_mapping_token,
     wq_lookup_latency_token,
     fastmem_enabled_token,
 
+    compression_enabled_token,
+    ideal_compressor_enabled_token,
+    compression_mode_token,
     max_blocks_per_cacheline_token,
-    
+
     cachesize_token,
     cacheways_token,
     cacherepl_token,
-    
+
     max_instructions_token,
     ff_instructions_token,
-	
-    
+
+
     comment_token,
     unknown_token,
 
-	RL_token,
-	WL_token,
-	WL_sram_token,
-	WL_sttram_token,
-    fast_write_latency_token,
-    slow_write_latency_token,
-	cache_bank_token,
-	me_bypassing_mode_token,
-	intensity_threshold_token
+    RL_token,
+    WL_token,
+    WL_sram_token,
+    WL_sttram_token,
+    cache_bank_token,
+    me_mode_token,
+    me_bypassing_mode_token,
+    sttram_mode_token,
+    hybrid_mode_token,
+    cache_sram_ways_token,
+    cache_sttram_ways_token,
+    cache_sram_size_token,
+    cache_sttram_size_token,
+    clean_write_mode_token,
+    intensity_threshold_token
 
 }token_t;
 
@@ -182,11 +191,23 @@ token_t tokenize(char * input){
         return address_mapping_token;
     } else if (strncmp(input, "WQ_LOOKUP_LATENCY",length) == 0) {
         return wq_lookup_latency_token;
+    } else if (strncmp(input, "COMPRESSION_ENABLED",length) == 0) {
+        return compression_enabled_token;
+    } else if (strncmp(input, "IDEAL_COMPRESSOR_ENABLED",length) == 0) {
+        return ideal_compressor_enabled_token;
+    } else if (strncmp(input, "COMPRESSION_MODE",length) == 0) {
+        return compression_mode_token;
+    } else if (strncmp(input, "MAX_BLOCKS_PER_LINE",length) == 0) {
+        return max_blocks_per_cacheline_token;
     } else if (strncmp(input, "CACHE_SIZE",length) == 0) {
         return cachesize_token;
     } else if (strncmp(input, "CACHE_WAYS",length) == 0) {
         return cacheways_token;
-	} else if (strncmp(input, "CACHE_REPL",length) == 0) {
+    } else if (strncmp(input,"CACHE_SRAM_WAYS",length)==0){
+        return cache_sram_ways_token;
+    } else if (strncmp(input,"CACHE_STTRAM_WAYS",length)==0){
+        return cache_sttram_ways_token;
+    } else if (strncmp(input, "CACHE_REPL",length) == 0) {
         return cacherepl_token;
     } else if (strncmp(input, "MAX_INST",length) == 0) {
         return max_instructions_token;
@@ -194,18 +215,34 @@ token_t tokenize(char * input){
         return ff_instructions_token;
     } else if (strncmp(input, "FASTMEM_ENABLED",length) == 0) {
         return fastmem_enabled_token;
-	} else if (strncmp(input,"L3_LATENCY_READ",length)==0){
-		return RL_token;
-	} else if (strncmp(input,"L3_LATENCY_WRITE",length)==0){
-		return WL_token;
-    }else if (strncmp(input,"L3_LATENCY_WRITE_FAST",length)==0){
-        return fast_write_latency_token;
-    }else if (strncmp(input,"L3_LATENCY_WRITE_SLOW",length)==0){
-        return slow_write_latency_token;
-	} else if (strncmp(input,"CACHE_BANKS",length)==0){
-		return cache_bank_token;
-	}
-	else {
+    } else if (strncmp(input,"L3_LATENCY_READ",length)==0){
+        return RL_token;
+    } else if (strncmp(input,"L3_LATENCY_WRITE",length)==0){
+        return WL_token;
+    } else if (strncmp(input,"L3_LATENCY_WRITE_SRAM",length)==0){
+        return WL_sram_token;
+    } else if (strncmp(input,"L3_LATENCY_WRITE_STTRAM",length)==0){
+        return WL_sttram_token;
+    } else if (strncmp(input,"CACHE_BANKS",length)==0){
+        return cache_bank_token;
+    } else if (strncmp(input,"ME_mode",length)==0){
+        return me_mode_token;
+    } else if (strncmp(input,"ME_bypassing_mode",length)==0){
+        return me_bypassing_mode_token;
+    } else if (strncmp(input,"sttram_mode",length)==0){
+        return sttram_mode_token;
+    } else if (strncmp(input,"hybrid_mode",length)==0){
+        return hybrid_mode_token;
+    } else if (strncmp(input,"CACHE_SIZE_SRAM",length)==0){
+        return cache_sram_size_token;
+    } else if (strncmp(input,"CACHE_SIZE_STTRAM",length)==0){
+        return cache_sttram_size_token;
+    } else if (strncmp(input,"clean_write_mode",length)==0){
+        return clean_write_mode_token;
+    } else if (strncmp(input,"intensity_threshold",length)==0){
+        return intensity_threshold_token;
+    }
+    else {
         printf("PANIC :Unknown token %s\n",input);
         return unknown_token;
     }
@@ -219,7 +256,7 @@ void read_config_file(FILE * fin)
     int	    input_int;
     unsigned long long input_long_long;
     float   input_float;
-    
+
     while ((c = fgetc(fin)) != EOF){
         if((c != EOL) && (c != CR) && (c != SPACE) && (c != TAB)){
             fscanf(fin,"%s",&input_string[1]);
@@ -228,7 +265,7 @@ void read_config_file(FILE * fin)
             fscanf(fin,"%s",&input_string[0]);
         }
         token_t input_field = tokenize(&input_string[0]);
-        
+
         switch(input_field)
         {
             case comment_token:
@@ -236,248 +273,276 @@ void read_config_file(FILE * fin)
                     /*comment, to be ignored */
                 }
                 break;
-                
+
             case processor_clk_multiplier_token:
                 fscanf(fin,"%d",&input_int);
                 PROCESSOR_CLK_MULTIPLIER =  input_int;
                 break;
-                
+
             case robsize_token:
                 fscanf(fin,"%d",&input_int);
                 ROBSIZE =  input_int;
                 break;
-                
+
             case max_retire_token:
                 fscanf(fin,"%d",&input_int);
                 MAX_RETIRE =  input_int;
                 break;
-                
+
             case max_fetch_token:
                 fscanf(fin,"%d",&input_int);
                 MAX_FETCH =  input_int;
                 break;
-                
+
             case pipelinedepth_token:
                 fscanf(fin,"%d",&input_int);
                 PIPELINEDEPTH =  input_int;
                 break;
-                
-                
+
+
             case num_channels_token:
                 fscanf(fin,"%d",&input_int);
                 NUM_CHANNELS =  input_int;
                 break;
-                
-                
+
+
             case num_ranks_token:
                 fscanf(fin,"%d",&input_int);
                 NUM_RANKS =  input_int;
                 break;
-                
+
             case num_banks_token:
                 fscanf(fin,"%d",&input_int);
                 NUM_BANKS =  input_int;
                 break;
-                
+
             case num_rows_token:
                 fscanf(fin,"%d",&input_int);
                 NUM_ROWS =  input_int;
                 break;
-                
+
             case num_columns_token:
                 fscanf(fin,"%d",&input_int);
                 NUM_COLUMNS =  input_int;
                 break;
-                
+
             case cache_line_size_token:
                 fscanf(fin,"%d",&input_int);
                 CACHE_LINE_SIZE =  input_int;
                 break;
-                
+
             case address_bits_token:
                 fscanf(fin,"%d",&input_int);
                 ADDRESS_BITS =  input_int;
                 break;
-                
+
             case dram_clk_frequency_token:
                 fscanf(fin,"%d",&input_int);
                 DRAM_CLK_FREQUENCY =  input_int;
                 break;
-                
+
             case t_rcd_token:
                 fscanf(fin,"%d",&input_int);
                 T_RCD = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_rp_token:
                 fscanf(fin,"%d",&input_int);
                 T_RP = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_cas_token:
                 fscanf(fin,"%d",&input_int);
                 T_CAS = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_rc_token:
                 fscanf(fin,"%d",&input_int);
                 T_RC = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_ras_token:
                 fscanf(fin,"%d",&input_int);
                 T_RAS = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_rrd_token:
                 fscanf(fin,"%d",&input_int);
                 T_RRD = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_faw_token:
                 fscanf(fin,"%d",&input_int);
                 T_FAW = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_wr_token:
                 fscanf(fin,"%d",&input_int);
                 T_WR = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_wtr_token:
                 fscanf(fin,"%d",&input_int);
                 T_WTR = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_rtp_token:
                 fscanf(fin,"%d",&input_int);
                 T_RTP = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_ccd_token:
                 fscanf(fin,"%d",&input_int);
                 T_CCD = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_rfc_token:
                 fscanf(fin,"%d",&input_int);
                 T_RFC = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_refi_token:
                 fscanf(fin,"%d",&input_int);
                 T_REFI = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_cwd_token:
                 fscanf(fin,"%d",&input_int);
                 T_CWD = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_rtrs_token:
                 fscanf(fin,"%d",&input_int);
                 T_RTRS = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_pd_min_token:
                 fscanf(fin,"%d",&input_int);
                 T_PD_MIN = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_xp_token:
                 fscanf(fin,"%d",&input_int);
                 T_XP = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_xp_dll_token:
                 fscanf(fin,"%d",&input_int);
                 T_XP_DLL = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case t_data_trans_token:
                 fscanf(fin,"%d",&input_int);
                 T_DATA_TRANS = input_int*PROCESSOR_CLK_MULTIPLIER;
                 break;
-                
+
             case vdd_token:
                 fscanf(fin,"%f",&input_float);
                 VDD = input_float;
                 break;
-                
+
             case idd0_token:
                 fscanf(fin,"%f",&input_float);
                 IDD0 = input_float;
                 break;
-                
+
             case idd2p0_token:
                 fscanf(fin,"%f",&input_float);
                 IDD2P0 = input_float;
                 break;
-                
+
             case idd2p1_token:
                 fscanf(fin,"%f",&input_float);
                 IDD2P1 = input_float;
                 break;
-                
+
             case idd2n_token:
                 fscanf(fin,"%f",&input_float);
                 IDD2N = input_float;
                 break;
-                
+
             case idd3p_token:
                 fscanf(fin,"%f",&input_float);
                 IDD3P = input_float;
                 break;
-                
+
             case idd3n_token:
                 fscanf(fin,"%f",&input_float);
                 IDD3N = input_float;
                 break;
-                
+
             case idd4r_token:
                 fscanf(fin,"%f",&input_float);
                 IDD4R = input_float;
                 break;
-                
+
             case idd4w_token:
                 fscanf(fin,"%f",&input_float);
                 IDD4W = input_float;
                 break;
-                
+
             case idd5_token:
                 fscanf(fin,"%f",&input_float);
                 IDD5 = input_float;
                 break;
-                
+
             case wq_capacity_token:
                 fscanf(fin,"%d",&input_int);
                 WQ_CAPACITY = input_int;
                 break;
-                
+
             case address_mapping_token:
                 fscanf(fin,"%d",&input_int);
                 ADDRESS_MAPPING= input_int;
                 break;
-                
+
             case wq_lookup_latency_token:
                 fscanf(fin,"%d",&input_int);
                 WQ_LOOKUP_LATENCY = input_int;
                 break;
-                
+
+            case compression_enabled_token:
+                fscanf(fin,"%d",&input_int);
+                COMPRESSION_ENABLED = input_int;
+                break;
+
+            case ideal_compressor_enabled_token:
+                fscanf(fin,"%d",&input_int);
+                IDEAL_COMPRESSOR_ENABLED = input_int;
+                break;
+
+            case compression_mode_token:
+                fscanf(fin,"%d",&input_int);
+                COMPRESSION_MODE = input_int;
+                break;
+
+            case max_blocks_per_cacheline_token:
+                fscanf(fin,"%d",&input_int);
+                MAX_BLOCKS_PER_LINE = input_int;
+                break;
+
             case cachesize_token:
                 fscanf(fin,"%d",&input_int);
                 CACHE_SIZE = input_int;
                 break;
-                
+
             case cacheways_token:
                 fscanf(fin,"%d",&input_int);
                 CACHE_WAYS = input_int;
                 break;
-			case cacherepl_token:
+            case cache_sram_ways_token:
+                fscanf(fin,"%d",&input_int);
+                CACHE_SRAM_WAYS = input_int;
+                break;
+            case cache_sttram_ways_token:
+                fscanf(fin,"%d",&input_int);
+                CACHE_STTRAM_WAYS = input_int;
+                break;
+            case cacherepl_token:
                 fscanf(fin,"%d",&input_int);
                 CACHE_REPL = input_int;
                 break;
-                
+
             case max_instructions_token:
                 fscanf(fin,"%llu",&input_long_long);
                 MAX_INST = input_long_long;
@@ -491,32 +556,64 @@ void read_config_file(FILE * fin)
                 fscanf(fin,"%d",&input_int);
                 FASTMEM_ENABLED = input_int;
                 break;
-			case RL_token:
-				fscanf(fin,"%d",&input_int);
-				L3_LATENCY_READ = input_int;
-				break;
-			case WL_token:
-				fscanf(fin,"%d",&input_int);
-				L3_LATENCY_WRITE = input_int;
-				break;
-            case fast_write_latency_token:
+            case RL_token:
                 fscanf(fin,"%d",&input_int);
-                L3_LATENCY_WRITE_FAST = input_int;
+                L3_LATENCY_READ = input_int;
                 break;
-            case slow_write_latency_token:
+            case WL_token:
                 fscanf(fin,"%d",&input_int);
-                L3_LATENCY_WRITE_SLOW = input_int;
+                L3_LATENCY_WRITE = input_int;
                 break;
-			case cache_bank_token:
-				fscanf(fin,"%d",&input_int);
-				CACHE_BANKS = input_int;
-				break;
+            case WL_sram_token:
+                fscanf(fin,"%d",&input_int);
+                L3_LATENCY_WRITE_SRAM = input_int;
+                break;
+            case WL_sttram_token:
+                fscanf(fin,"%d",&input_int);
+                L3_LATENCY_WRITE_STTRAM = input_int;
+                break;
+            case cache_bank_token:
+                fscanf(fin,"%d",&input_int);
+                CACHE_BANKS = input_int;
+                break;
+            case me_mode_token:
+                fscanf(fin,"%d",&input_int);
+                ME_mode = input_int;
+                break;
+            case me_bypassing_mode_token:
+                fscanf(fin,"%d",&input_int);
+                ME_bypassing_mode = input_int;
+                break;
+            case sttram_mode_token:
+                fscanf(fin,"%d",&input_int);
+                sttram_mode = input_int;
+                break;
+            case hybrid_mode_token:
+                fscanf(fin,"%d",&input_int);
+                hybrid_mode = input_int;
+                break;
+            case cache_sram_size_token:
+                fscanf(fin,"%d",&input_int);
+                CACHE_SIZE_SRAM = input_int;
+                break;
+            case cache_sttram_size_token:
+                fscanf(fin,"%d",&input_int);
+                CACHE_SIZE_STTRAM = input_int;
+                break;
+            case clean_write_mode_token:
+                fscanf(fin,"%d",&input_int);
+                clean_write_mode = input_int;
+                break;
+            case intensity_threshold_token:
+                fscanf(fin,"%f",&input_float);
+                intensity_threshold = input_float;
+                break;
 
             case unknown_token:
             default:
                 printf("PANIC: bad token in cfg file\n");
                 break;
-                
+
         }
     }
 }
@@ -528,12 +625,16 @@ void print_params()
     printf("------------------------\n");
     printf("- SIMULATOR PARAMETERS -\n");
     printf("------------------------\n");
-    
+
     printf("\n-------------------\n");
     printf("- SYSTEM RUN -\n");
     printf("-------------------\n");
     printf("MAX_INSTRUCTIONS_PER_CORE:  %llu\n", MAX_INST);
     printf("FF_INSTRUCTIONS_PER_CORE:  %llu\n", FF_INST);
+    printf("ME_mode: %d\n",ME_mode);
+    printf("ME_bypassing_mode: %d\n",ME_bypassing_mode);
+    printf("hybrid_mode: %d\n",hybrid_mode);
+
     printf("\n-------------\n");
     printf("- PROCESSOR -\n");
     printf("-------------\n");
@@ -542,7 +643,7 @@ void print_params()
     printf("MAX_FETCH:                  %6d\n", MAX_FETCH);
     printf("MAX_RETIRE:                 %6d\n", MAX_RETIRE);
     printf("PIPELINEDEPTH:              %6d\n", PIPELINEDEPTH);
-    
+
     printf("\n---------------\n");
     printf("- DRAM Config -\n");
     printf("---------------\n");
@@ -551,7 +652,7 @@ void print_params()
     printf("NUM_BANKS:                  %6d\n", NUM_BANKS);
     printf("NUM_ROWS:                   %6d\n", NUM_ROWS);
     printf("NUM_COLUMNS:                %6d\n", NUM_COLUMNS);
-    
+
     printf("\n---------------\n");
     printf("- DRAM Timing -\n");
     printf("---------------\n");
@@ -574,11 +675,11 @@ void print_params()
     printf("T_XP:                       %6d\n", T_XP);
     printf("T_XP_DLL:                   %6d\n", T_XP_DLL);
     printf("T_DATA_TRANS:               %6d\n", T_DATA_TRANS);
-    
+
     printf("\n---------------------------\n");
     printf("- DRAM Idd Specifications -\n");
     printf("---------------------------\n");
-    
+
     printf("VDD:                        %05.2f\n", VDD);
     printf("IDD0:                       %05.2f\n", IDD0);
     printf("IDD2P0:                     %05.2f\n", IDD2P0);
@@ -589,7 +690,7 @@ void print_params()
     printf("IDD4R:                      %05.2f\n", IDD4R);
     printf("IDD4W:                      %05.2f\n", IDD4W);
     printf("IDD5:                       %05.2f\n", IDD5);
-    
+
     printf("\n-------------------\n");
     printf("- DRAM Controller -\n");
     printf("-------------------\n");
@@ -597,19 +698,29 @@ void print_params()
     printf("ADDRESS_MAPPING:            %6d\n", ADDRESS_MAPPING);
     printf("WQ_LOOKUP_LATENCY:          %6d\n", WQ_LOOKUP_LATENCY);
     printf("FASTMEM_ENABLED:          %6d\n", FASTMEM_ENABLED);
-    
+
     printf("\n-------------------\n");
     printf("- Cache Configuration -\n");
     printf("-------------------\n");
+    printf("CACHE_SIZE:                %6d\n", CACHE_SIZE);
+    printf("CACHE_SIZE_SRAM:           %6d\n", CACHE_SIZE_SRAM);
+    printf("CACHE_SIZE_STTRAM:         %6d\n", CACHE_SIZE_STTRAM);
+    printf("CACHE_WAYS:                %6d\n", CACHE_WAYS);
+    printf("CACHE_SRAM_WAYS:		   %6d\n", CACHE_SRAM_WAYS);
+    printf("CACHE_STTRAM_WAYS:		   %6d\n", CACHE_STTRAM_WAYS);
     printf("CACHE_REPL:                %6d\n", CACHE_REPL);
-	printf("L3_LATENCY_READ:           %6d\n", L3_LATENCY_READ);
-	printf("L3_LATENCY_WRITE:          %6d\n", L3_LATENCY_WRITE);
-    printf("L3_LATENCY_WRITE_FAST:     %6d\n", L3_LATENCY_WRITE_FAST);
-    printf("L3_LATENCY_WRITE_SLOW:     %6d\n", L3_LATENCY_WRITE_SLOW);
-	printf("CACHE_BANKS:               %6d\n", CACHE_BANKS);
+    printf("COMPRESSION_ENABLED:       %6d\n", COMPRESSION_ENABLED);
+    printf("COMPRESSION_MODE:          %6d\n", COMPRESSION_MODE);
+    printf("IDEAL_COMPRESSOR_ENABLED:  %6d\n", IDEAL_COMPRESSOR_ENABLED);
+    printf("MAX_BLOCKS_PER_LINE:       %6d\n", MAX_BLOCKS_PER_LINE);
+    printf("L3_LATENCY_READ:           %6d\n", L3_LATENCY_READ);
+    printf("L3_LATENCY_WRITE:          %6d\n", L3_LATENCY_WRITE);
+    printf("L3_LATENCY_WRITE_SRAM:     %6d\n", L3_LATENCY_WRITE_SRAM);
+    printf("L3_LATENCY_WRITE_STTRAM:   %6d\n", L3_LATENCY_WRITE_STTRAM);
+    printf("CACHE_BANKS:               %6d\n", CACHE_BANKS);
     printf("\n----------------------------------------------------------------------------------------\n");
-    
-    
+
+
 }
 
 
