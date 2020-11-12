@@ -61,9 +61,6 @@ typedef enum {
     wq_lookup_latency_token,
     fastmem_enabled_token,
 
-    compression_enabled_token,
-    ideal_compressor_enabled_token,
-    compression_mode_token,
     max_blocks_per_cacheline_token,
 
     cachesize_token,
@@ -81,16 +78,10 @@ typedef enum {
     WL_token,
     WL_sram_token,
     WL_sttram_token,
+    fast_write_latency_token,
+    slow_write_latency_token,
     cache_bank_token,
-    me_mode_token,
     me_bypassing_mode_token,
-    sttram_mode_token,
-    hybrid_mode_token,
-    cache_sram_ways_token,
-    cache_sttram_ways_token,
-    cache_sram_size_token,
-    cache_sttram_size_token,
-    clean_write_mode_token,
     intensity_threshold_token
 
 }token_t;
@@ -191,22 +182,10 @@ token_t tokenize(char * input){
         return address_mapping_token;
     } else if (strncmp(input, "WQ_LOOKUP_LATENCY",length) == 0) {
         return wq_lookup_latency_token;
-    } else if (strncmp(input, "COMPRESSION_ENABLED",length) == 0) {
-        return compression_enabled_token;
-    } else if (strncmp(input, "IDEAL_COMPRESSOR_ENABLED",length) == 0) {
-        return ideal_compressor_enabled_token;
-    } else if (strncmp(input, "COMPRESSION_MODE",length) == 0) {
-        return compression_mode_token;
-    } else if (strncmp(input, "MAX_BLOCKS_PER_LINE",length) == 0) {
-        return max_blocks_per_cacheline_token;
     } else if (strncmp(input, "CACHE_SIZE",length) == 0) {
         return cachesize_token;
     } else if (strncmp(input, "CACHE_WAYS",length) == 0) {
         return cacheways_token;
-    } else if (strncmp(input,"CACHE_SRAM_WAYS",length)==0){
-        return cache_sram_ways_token;
-    } else if (strncmp(input,"CACHE_STTRAM_WAYS",length)==0){
-        return cache_sttram_ways_token;
     } else if (strncmp(input, "CACHE_REPL",length) == 0) {
         return cacherepl_token;
     } else if (strncmp(input, "MAX_INST",length) == 0) {
@@ -219,28 +198,12 @@ token_t tokenize(char * input){
         return RL_token;
     } else if (strncmp(input,"L3_LATENCY_WRITE",length)==0){
         return WL_token;
-    } else if (strncmp(input,"L3_LATENCY_WRITE_SRAM",length)==0){
-        return WL_sram_token;
-    } else if (strncmp(input,"L3_LATENCY_WRITE_STTRAM",length)==0){
-        return WL_sttram_token;
+    }else if (strncmp(input,"L3_LATENCY_WRITE_FAST",length)==0){
+        return fast_write_latency_token;
+    }else if (strncmp(input,"L3_LATENCY_WRITE_SLOW",length)==0){
+        return slow_write_latency_token;
     } else if (strncmp(input,"CACHE_BANKS",length)==0){
         return cache_bank_token;
-    } else if (strncmp(input,"ME_mode",length)==0){
-        return me_mode_token;
-    } else if (strncmp(input,"ME_bypassing_mode",length)==0){
-        return me_bypassing_mode_token;
-    } else if (strncmp(input,"sttram_mode",length)==0){
-        return sttram_mode_token;
-    } else if (strncmp(input,"hybrid_mode",length)==0){
-        return hybrid_mode_token;
-    } else if (strncmp(input,"CACHE_SIZE_SRAM",length)==0){
-        return cache_sram_size_token;
-    } else if (strncmp(input,"CACHE_SIZE_STTRAM",length)==0){
-        return cache_sttram_size_token;
-    } else if (strncmp(input,"clean_write_mode",length)==0){
-        return clean_write_mode_token;
-    } else if (strncmp(input,"intensity_threshold",length)==0){
-        return intensity_threshold_token;
     }
     else {
         printf("PANIC :Unknown token %s\n",input);
@@ -501,26 +464,6 @@ void read_config_file(FILE * fin)
                 WQ_LOOKUP_LATENCY = input_int;
                 break;
 
-            case compression_enabled_token:
-                fscanf(fin,"%d",&input_int);
-                COMPRESSION_ENABLED = input_int;
-                break;
-
-            case ideal_compressor_enabled_token:
-                fscanf(fin,"%d",&input_int);
-                IDEAL_COMPRESSOR_ENABLED = input_int;
-                break;
-
-            case compression_mode_token:
-                fscanf(fin,"%d",&input_int);
-                COMPRESSION_MODE = input_int;
-                break;
-
-            case max_blocks_per_cacheline_token:
-                fscanf(fin,"%d",&input_int);
-                MAX_BLOCKS_PER_LINE = input_int;
-                break;
-
             case cachesize_token:
                 fscanf(fin,"%d",&input_int);
                 CACHE_SIZE = input_int;
@@ -529,14 +472,6 @@ void read_config_file(FILE * fin)
             case cacheways_token:
                 fscanf(fin,"%d",&input_int);
                 CACHE_WAYS = input_int;
-                break;
-            case cache_sram_ways_token:
-                fscanf(fin,"%d",&input_int);
-                CACHE_SRAM_WAYS = input_int;
-                break;
-            case cache_sttram_ways_token:
-                fscanf(fin,"%d",&input_int);
-                CACHE_STTRAM_WAYS = input_int;
                 break;
             case cacherepl_token:
                 fscanf(fin,"%d",&input_int);
@@ -564,49 +499,17 @@ void read_config_file(FILE * fin)
                 fscanf(fin,"%d",&input_int);
                 L3_LATENCY_WRITE = input_int;
                 break;
-            case WL_sram_token:
+            case fast_write_latency_token:
                 fscanf(fin,"%d",&input_int);
-                L3_LATENCY_WRITE_SRAM = input_int;
+                L3_LATENCY_WRITE_FAST = input_int;
                 break;
-            case WL_sttram_token:
+            case slow_write_latency_token:
                 fscanf(fin,"%d",&input_int);
-                L3_LATENCY_WRITE_STTRAM = input_int;
+                L3_LATENCY_WRITE_SLOW = input_int;
                 break;
             case cache_bank_token:
                 fscanf(fin,"%d",&input_int);
                 CACHE_BANKS = input_int;
-                break;
-            case me_mode_token:
-                fscanf(fin,"%d",&input_int);
-                ME_mode = input_int;
-                break;
-            case me_bypassing_mode_token:
-                fscanf(fin,"%d",&input_int);
-                ME_bypassing_mode = input_int;
-                break;
-            case sttram_mode_token:
-                fscanf(fin,"%d",&input_int);
-                sttram_mode = input_int;
-                break;
-            case hybrid_mode_token:
-                fscanf(fin,"%d",&input_int);
-                hybrid_mode = input_int;
-                break;
-            case cache_sram_size_token:
-                fscanf(fin,"%d",&input_int);
-                CACHE_SIZE_SRAM = input_int;
-                break;
-            case cache_sttram_size_token:
-                fscanf(fin,"%d",&input_int);
-                CACHE_SIZE_STTRAM = input_int;
-                break;
-            case clean_write_mode_token:
-                fscanf(fin,"%d",&input_int);
-                clean_write_mode = input_int;
-                break;
-            case intensity_threshold_token:
-                fscanf(fin,"%f",&input_float);
-                intensity_threshold = input_float;
                 break;
 
             case unknown_token:
@@ -631,10 +534,6 @@ void print_params()
     printf("-------------------\n");
     printf("MAX_INSTRUCTIONS_PER_CORE:  %llu\n", MAX_INST);
     printf("FF_INSTRUCTIONS_PER_CORE:  %llu\n", FF_INST);
-    printf("ME_mode: %d\n",ME_mode);
-    printf("ME_bypassing_mode: %d\n",ME_bypassing_mode);
-    printf("hybrid_mode: %d\n",hybrid_mode);
-
     printf("\n-------------\n");
     printf("- PROCESSOR -\n");
     printf("-------------\n");
@@ -702,21 +601,11 @@ void print_params()
     printf("\n-------------------\n");
     printf("- Cache Configuration -\n");
     printf("-------------------\n");
-    printf("CACHE_SIZE:                %6d\n", CACHE_SIZE);
-    printf("CACHE_SIZE_SRAM:           %6d\n", CACHE_SIZE_SRAM);
-    printf("CACHE_SIZE_STTRAM:         %6d\n", CACHE_SIZE_STTRAM);
-    printf("CACHE_WAYS:                %6d\n", CACHE_WAYS);
-    printf("CACHE_SRAM_WAYS:		   %6d\n", CACHE_SRAM_WAYS);
-    printf("CACHE_STTRAM_WAYS:		   %6d\n", CACHE_STTRAM_WAYS);
     printf("CACHE_REPL:                %6d\n", CACHE_REPL);
-    printf("COMPRESSION_ENABLED:       %6d\n", COMPRESSION_ENABLED);
-    printf("COMPRESSION_MODE:          %6d\n", COMPRESSION_MODE);
-    printf("IDEAL_COMPRESSOR_ENABLED:  %6d\n", IDEAL_COMPRESSOR_ENABLED);
-    printf("MAX_BLOCKS_PER_LINE:       %6d\n", MAX_BLOCKS_PER_LINE);
     printf("L3_LATENCY_READ:           %6d\n", L3_LATENCY_READ);
     printf("L3_LATENCY_WRITE:          %6d\n", L3_LATENCY_WRITE);
-    printf("L3_LATENCY_WRITE_SRAM:     %6d\n", L3_LATENCY_WRITE_SRAM);
-    printf("L3_LATENCY_WRITE_STTRAM:   %6d\n", L3_LATENCY_WRITE_STTRAM);
+    printf("L3_LATENCY_WRITE_FAST:     %6d\n", L3_LATENCY_WRITE_FAST);
+    printf("L3_LATENCY_WRITE_SLOW:     %6d\n", L3_LATENCY_WRITE_SLOW);
     printf("CACHE_BANKS:               %6d\n", CACHE_BANKS);
     printf("\n----------------------------------------------------------------------------------------\n");
 

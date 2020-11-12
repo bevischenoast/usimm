@@ -7,20 +7,14 @@
 
 unsigned long long MAX_INST; // 4 Billion by default
 unsigned long long FF_INST;  //the number of instructions that will be fast-forworded
-int ME_mode;
-int ME_bypassing_mode;
-int hybrid_mode;
-int sttram_mode;
-int clean_write_mode;
-float intensity_threshold;
 
 /********************/
 /* Processor params */
 /********************/
 int L3_LATENCY_READ;
 int L3_LATENCY_WRITE;
-int L3_LATENCY_WRITE_SRAM;
-int L3_LATENCY_WRITE_STTRAM;
+int L3_LATENCY_WRITE_FAST;
+int L3_LATENCY_WRITE_SLOW;
 
 // number of cores in mulicore
 int NUMCORES;
@@ -47,20 +41,12 @@ unsigned long long OS_PAGESIZE;
 unsigned long long OS_NUM_RND_TRIES;
 
 /*****************************/
-/* Cache Configuration and Compression Related Parameters */
+/* Cache Configuration */
 /*****************************/
 
-int CACHE_SIZE; // 4 MB
-int CACHE_SIZE_SRAM;
-int CACHE_SIZE_STTRAM;
-int CACHE_WAYS; // 8 Ways
-int CACHE_SRAM_WAYS;
-int CACHE_STTRAM_WAYS;
-int COMPRESSION_ENABLED; // 0 by default (not enabled)
-int COMPRESSION_MODE; // 0 by default (no mode)
-int MAX_BLOCKS_PER_LINE; // 4 compressed blocks by default
+int CACHE_SIZE; // 8 MB
+int CACHE_WAYS; // 16 Ways
 int CACHE_REPL; // 0 by default for LRU
-int IDEAL_COMPRESSOR_ENABLED; //0
 int CACHE_BANKS;
 
 /*****************************/
