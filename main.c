@@ -16,7 +16,7 @@
 #include "zlib.h"
 
 
-#define MAXTRACELINESIZE 128
+#define MAXTRACELINESIZE 1024
 
 #define HASHTABLE_SIZE 1024*1024
 
@@ -143,9 +143,10 @@ int *prefixtable; /* For (multi-threaded) MT workloads only */
 
 MCache_Entry llc_miss_handler(Addr addr, char optype, Addr instrpc, char is_write,
                               MCache *L3Cache, long long int *llc_available_cycle,
-                              int banknum,int numc, int ROB_tail) {
+                              int banknum,int numc, int ROB_tail, char* cachedata, int cachedata_size) {
     MCache_Entry victim;
-    victim = install(L3Cache, addr, instrpc, is_write);  //addr[numc] is byte address here
+    
+    victim = install(L3Cache, addr, instrpc, is_write, cachedata, cachedata_size);  //addr[numc] is byte address here
     int write_latency = 0;
 
     if(PI_ENABLED)
@@ -233,6 +234,8 @@ int main(int argc, char *argv[]) {
     long long int *instrpc;
     int *compressedSize1Line;
     int *compressedSize2Line;
+    long long int **cachedata;
+    char cachedata_buf[64];
 
     int chips_per_rank = -1;
     long long int total_inst_fetched = 0;
@@ -299,7 +302,12 @@ int main(int argc, char *argv[]) {
     llc_available_cycle = (long long int *) malloc(sizeof(long long int) * CACHE_BANKS);
     for (int i = 0; i < CACHE_BANKS; i++)
         llc_available_cycle[i] = 0;
-
+    
+    cachedata= (long long int**) calloc(sizeof(long long int*), NUMCORES);
+    
+    for (int i=0; i<NUMCORES; i++)
+        cachedata[i]=(long long int*) calloc(sizeof(long long int), 8);
+    
     prefixtable = (int *) malloc(sizeof(int) * NUMCORES);
     currMTapp = -1;
 
@@ -418,18 +426,37 @@ int main(int argc, char *argv[]) {
         for (numc = 0; numc < NUMCORES; numc++) {
             if (ff_done[numc] == 0 && gzgets(tif[numc], newstr, MAXTRACELINESIZE)) {
                 inst_comp++;
+                long long int tmp;
                 if (sscanf(newstr, "%lld %c", &nonmemops[numc], &opertype[numc]) > 0) {
                     if (opertype[numc] == 'R') {
-                        if (sscanf(newstr, "%lld %c %llx %d %d", &nonmemops[numc], &opertype[numc], &addr[numc],
-                                   &compressedSize1Line[numc], &compressedSize2Line[numc]) < 1) {
+                        if (sscanf(newstr, "%lld %c %llx %d %d %llx %llx %llx %llx %llx %llx %llx %llx", &nonmemops[numc], &opertype[numc], &addr[numc],
+                                   &compressedSize1Line[numc], &compressedSize2Line[numc], 
+                                   &cachedata[numc][0],
+                                   &cachedata[numc][1],
+                                   &cachedata[numc][2],
+                                   &cachedata[numc][3],
+                                   &cachedata[numc][4],
+                                   &cachedata[numc][5],
+                                   &cachedata[numc][6],
+                                   &cachedata[numc][7]
+                                   ) < 1) {
                             fprintf(stderr, "[1]Panic.  Poor trace format.%s\n", newstr);
                             return -4;
                         }
                     } else {
                         if (opertype[numc] == 'W') {
-                            if (sscanf(newstr, "%lld %c %llx %d %d", &nonmemops[numc], &opertype[numc], &addr[numc],
-                                       &compressedSize1Line[numc], &compressedSize2Line[numc]) < 1) {
-                                fprintf(stderr, "[2]Panic.  Poor trace format.%s\n", newstr);
+                            if (sscanf(newstr, "%lld %c %llx %d %d %llx %llx %llx %llx %llx %llx %llx %llx", &nonmemops[numc], &opertype[numc], &addr[numc],
+                                   &compressedSize1Line[numc], &compressedSize2Line[numc], 
+                                   &cachedata[numc][0],
+                                   &cachedata[numc][1],
+                                   &cachedata[numc][2],
+                                   &cachedata[numc][3],
+                                   &cachedata[numc][4],
+                                   &cachedata[numc][5],
+                                   &cachedata[numc][6],
+                                   &cachedata[numc][7]
+                                )<1){          
+                            fprintf(stderr, "[2]Panic.  Poor trace format.%s\n", newstr);
                                 return -3;
                             }
                         } else {
@@ -437,7 +464,6 @@ int main(int argc, char *argv[]) {
                             return -2;
                         }
                     }
-
                 } else {
                     fprintf(stderr, "[4]Panic.  Poor trace format. %s\n", newstr);
                     return -1;
@@ -453,8 +479,11 @@ int main(int argc, char *argv[]) {
                 //fill cache during the fast-forwording
                 L3Hit = isHit(L3Cache, addr[numc], is_write); //addr[numc] is byte address here
                 if (L3Hit == 0) {
+                    
+                    for(int i=0; i<8;i++)
+                        memcpy(&cachedata_buf[i*8],&cachedata[numc][i],8);
                     MCache_Entry victim = install(L3Cache, addr[numc], instrpc[numc],
-                                                  is_write);  //addr[numc] is byte address here
+                                                  is_write,cachedata_buf,64);  //addr[numc] is byte address here
                     uns64 addr_tmp = addr[numc] >> 6;
                     insertnode(addr_tmp, opertype[numc]);
                 }
@@ -581,11 +610,15 @@ int main(int argc, char *argv[]) {
                             } else // Cache miss
                             {
                                 llc_read_miss++;
+                                
                                 //update LLC
+                                for(int i=0; i<8;i++)
+                                    memcpy(&cachedata_buf[i*8],&cachedata[numc][i],8);
+
                                 MCache_Entry victim = llc_miss_handler(addr[numc], opertype[numc],
                                                                        instrpc[numc], false, L3Cache,
                                                                        llc_available_cycle, banknum,
-                                                                       numc, ROB[numc].tail);
+                                                                       numc, ROB[numc].tail, cachedata_buf, 64);
 
                                 //handling victim block
                                 victim_block_handler(victim, L3Cache->lineoffset, numc, ROB[numc].tail);
@@ -632,10 +665,12 @@ int main(int argc, char *argv[]) {
                                 } else if (L3Hit == 0) {
                                     llc_write_miss++;
                                     //update LLC
+                                    for(int i=0; i<8;i++)
+                                        memcpy(&cachedata_buf[i*8],&cachedata[numc][i],8);
                                     MCache_Entry victim = llc_miss_handler(addr[numc], opertype[numc],
                                                                            instrpc[numc], true, L3Cache,
                                                                            llc_available_cycle, banknum,
-                                                                           numc, ROB[numc].tail);
+                                                                           numc, ROB[numc].tail, cachedata_buf, 64);
                                     //handing victim block
                                     victim_block_handler(victim, L3Cache->lineoffset, numc, ROB[numc].tail);
                                     // Check to see if the read is for buffered data in write queue -
@@ -669,22 +704,38 @@ int main(int argc, char *argv[]) {
                             inst_comp++;
                             if (sscanf(newstr, "%lld %c", &nonmemops[numc], &opertype[numc]) > 0) {
                                 if (opertype[numc] == 'R') {
-                                    if (sscanf(newstr, "%lld %c %llx %d %d", &nonmemops[numc], &opertype[numc],
-                                               &addr[numc], &compressedSize1Line[numc], &compressedSize2Line[numc]) <
-                                        1) {
-                                        fprintf(stderr, "Panic.  Poor trace format.\n");
+                                    if (sscanf(newstr, "%lld %c %llx %d %d %llx %llx %llx %llx %llx %llx %llx %llx", &nonmemops[numc], &opertype[numc], &addr[numc],
+                                            &compressedSize1Line[numc], &compressedSize2Line[numc], 
+                                               &cachedata[numc][0],
+                                               &cachedata[numc][1],
+                                               &cachedata[numc][2],
+                                               &cachedata[numc][3],
+                                               &cachedata[numc][4],
+                                               &cachedata[numc][5],
+                                               &cachedata[numc][6],
+                                               &cachedata[numc][7]
+                                               ) < 1) {
+                                        fprintf(stderr, "[1]Panic.  Poor trace format.%s\n", newstr);
                                         return -4;
                                     }
                                 } else {
                                     if (opertype[numc] == 'W') {
-                                        if (sscanf(newstr, "%lld %c %llx %d %d", &nonmemops[numc], &opertype[numc],
-                                                   &addr[numc], &compressedSize1Line[numc],
-                                                   &compressedSize2Line[numc]) < 1) {
-                                            fprintf(stderr, "Panic.  Poor trace format.\n");
+                                        if (sscanf(newstr, "%lld %c %llx %d %d %llx %llx %llx %llx %llx %llx %llx %llx", &nonmemops[numc], &opertype[numc], &addr[numc],
+                                            &compressedSize1Line[numc], &compressedSize2Line[numc], 
+                                               &cachedata[numc][0],
+                                               &cachedata[numc][1],
+                                               &cachedata[numc][2],
+                                               &cachedata[numc][3],
+                                               &cachedata[numc][4],
+                                               &cachedata[numc][5],
+                                               &cachedata[numc][6],
+                                               &cachedata[numc][7]
+                                            )<1){          
+                                        fprintf(stderr, "[2]Panic.  Poor trace format.%s\n", newstr);
                                             return -3;
                                         }
                                     } else {
-                                        fprintf(stderr, "Panic.  Poor trace format.\n");
+                                        fprintf(stderr, "[3]Panic.  Poor trace format.%s\n", newstr);
                                         return -2;
                                     }
                                 }

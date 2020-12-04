@@ -43,6 +43,7 @@ typedef struct MCache_Entry {
     uns64 rd_count;
     uns64 wr_count;
     uns comp_size;
+    char data[64];
 
 } MCache_Entry;
 
@@ -106,9 +107,9 @@ MCache_Entry find_and_invalid_a_dead_block(MCache *c, Addr addr );
 
 void write_back_a_dirty_dead_block(MCache_Entry deadblock,int numc, int ROB_tail, long long int CYCLE_VAL);
 
-MCache_Entry install(MCache* c, Addr addr, Addr pc, Flag dirty);
+MCache_Entry install(MCache* c, Addr addr, Addr pc, Flag dirty, char* data, int datasize);
 
-MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty);
+MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty, char* data, int datasize);
 
 
 void mcache_new(MCache* c, uns sets, uns assocs, uns linesize, uns repl);

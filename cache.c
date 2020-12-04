@@ -10,6 +10,7 @@
 #include "stdio.h"
 #include <string.h>
 
+//#define DEBUG_CACHEDATA 1
 void init_cache(MCache* c, uns sets, uns assocs, uns repl_policy, uns linesize)
 {
     c->sets    = sets;
@@ -42,7 +43,7 @@ int isHit(MCache *c, Addr addr, Flag is_write)
     return isHit;
 }
 
-MCache_Entry install(MCache *c, Addr addr, Addr pc, Flag is_write)
+MCache_Entry install(MCache *c, Addr addr, Addr pc, Flag is_write, char* data,int datasize)
 {
     Addr tag = addr;
     MCache_Entry victim;
@@ -55,7 +56,7 @@ MCache_Entry install(MCache *c, Addr addr, Addr pc, Flag is_write)
     victim.ripctr = 0;
     victim.last_access = 0;
 
-    victim = mcache_install(c,tag,pc,is_write);
+    victim = mcache_install(c,tag,pc,is_write, data, datasize);
     return victim;
 }
 ////////////////////////////////////////////////////////////////////
@@ -214,7 +215,7 @@ Flag mcache_mark_dirty    (MCache *c, Addr tag)
 }
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
-MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty)
+MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty, char* data, int datasize)
 {
     uns64 offset = c->lineoffset;
     Addr  tag  = addr>>offset; // full tags
@@ -265,6 +266,20 @@ MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty)
     entry->pc    = pc;
     entry->address = addr;
     entry->access_count =0;
+    if(datasize!=64)
+    {
+        fprintf(stderr,"block size should be 64\n");
+        exit(-1);
+    }
+    memcpy(entry->data,data,datasize);
+
+#ifdef DEBUG_CACHEDATA
+    for(int i=0; i<16;i++)
+    {
+        printf("%x\t",*((int*)entry->data+i));
+    }
+    printf("\n");
+#endif
 
     if(dirty==TRUE)
         entry->dirty=TRUE;

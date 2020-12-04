@@ -4,7 +4,7 @@ BINDIR = ../bin
 OBJDIR = ../obj
 OBJS = $(OBJDIR)/main.o $(OBJDIR)/malloc_lib.o $(OBJDIR)/hash_lib.o $(OBJDIR)/os.o $(OBJDIR)/memory_controller.o $(OBJDIR)/scheduler.o $(OBJDIR)/cache.o  $(OBJDIR)/map.o 
 CC = gcc -std=c99
-DEBUG =  -g -O3
+DEBUG =  -O3 -g 
 CFLAGS = -Wall -c $(DEBUG) 
 LFLAGS = -Wall $(DEBUG) -lm -lz
 
