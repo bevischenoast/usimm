@@ -82,7 +82,9 @@ typedef enum {
     slow_write_latency_token,
     cache_bank_token,
     me_bypassing_mode_token,
-    intensity_threshold_token
+    intensity_threshold_token,
+    pi_enabled_token,
+    ideal_mode_token
 
 }token_t;
 
@@ -204,6 +206,10 @@ token_t tokenize(char * input){
         return slow_write_latency_token;
     } else if (strncmp(input,"CACHE_BANKS",length)==0){
         return cache_bank_token;
+    }else if (strncmp(input,"PI_ENABLED",length)==0){
+        return pi_enabled_token;
+    }else if (strncmp(input,"IDEAL_MODE",length)==0){
+        return ideal_mode_token;
     }
     else {
         printf("PANIC :Unknown token %s\n",input);
@@ -511,6 +517,16 @@ void read_config_file(FILE * fin)
                 fscanf(fin,"%d",&input_int);
                 CACHE_BANKS = input_int;
                 break;
+	    case pi_enabled_token:
+                fscanf(fin,"%d",&input_int);
+                PI_ENABLED = input_int;
+                break;
+	    case ideal_mode_token:
+                fscanf(fin,"%d",&input_int);
+                IDEAL_MODE = input_int;
+                break;
+
+
 
             case unknown_token:
             default:

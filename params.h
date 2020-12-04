@@ -15,6 +15,8 @@ int L3_LATENCY_READ;
 int L3_LATENCY_WRITE;
 int L3_LATENCY_WRITE_FAST;
 int L3_LATENCY_WRITE_SLOW;
+int PI_ENABLED;
+int IDEAL_MODE;
 
 // number of cores in mulicore
 int NUMCORES;

@@ -36,6 +36,7 @@ long long int fill_invalidation = 0, write_back_hit_invalidation = 0 ;
 long long int dirty_deadblock_write_back = 0;
 long long int dirty_deadblock_invalidation = 0,  clean_dead_block_invalidation = 0;
 long long int dirty_victim_write_back = 0;
+long long int fill_in_invalided_block = 0;
 //////////////////////////////////////////
 long long int llc_write_access = 0;
 long long int pp_changed = 0;
@@ -147,22 +148,36 @@ MCache_Entry llc_miss_handler(Addr addr, char optype, Addr instrpc, char is_writ
     victim = install(L3Cache, addr, instrpc, is_write);  //addr[numc] is byte address here
     int write_latency = 0;
 
-    if (victim.valid) {
-        write_latency = L3_LATENCY_WRITE_SLOW;
-        MCache_Entry deadblock = find_and_invalid_a_dead_block(L3Cache, addr);
-        slow_write++;
-        fill_invalidation++;
-        if (deadblock.dirty) {
-            write_back_a_dirty_dead_block(deadblock, numc, ROB_tail, CYCLE_VAL);
-            dirty_deadblock_invalidation++;
-            dirty_deadblock_write_back++;
-        } else{
-            clean_dead_block_invalidation++;
-        }
-    } else {
-        write_latency = L3_LATENCY_WRITE_FAST;
-        fast_write++;
+    if(PI_ENABLED)
+    {
+	if(victim.valid)
+	{
+      	  	write_latency = L3_LATENCY_WRITE_SLOW;
+        
+        	slow_write++;
+		MCache_Entry deadblock = find_and_invalid_a_dead_block(L3Cache, addr);
+        	fill_invalidation++;
+		if (deadblock.dirty) {
+		    write_back_a_dirty_dead_block(deadblock, numc, ROB_tail, CYCLE_VAL);
+		    dirty_deadblock_invalidation++;
+		    dirty_deadblock_write_back++;
+		} else
+		    clean_dead_block_invalidation++;
+    	} else {
+        	write_latency = L3_LATENCY_WRITE_FAST;
+        	fast_write++;
+        	fill_in_invalided_block++;
+    	}	
     }
+    else if(IDEAL_MODE){
+		write_latency=L3_LATENCY_WRITE_FAST;
+		fast_write++;
+    }
+    else{
+		write_latency=L3_LATENCY_WRITE_SLOW;
+		slow_write++;
+	}
+    
     llc_available_cycle[banknum] = CYCLE_VAL + write_latency;
     return victim;
 }
@@ -603,7 +618,7 @@ int main(int argc, char *argv[]) {
                                 L3Hit = isHit(L3Cache, addr[numc], true); //addr[numc] is byte address here
 
                                 if (L3Hit == 1) {
-                                    MCache_Entry deadblock = find_and_invalid_a_dead_block(L3Cache, addr[numc]);
+                                    /*MCache_Entry deadblock = find_and_invalid_a_dead_block(L3Cache, addr[numc]);
                                     write_back_hit_invalidation++;
                                     if (deadblock.dirty) {
                                         write_back_a_dirty_dead_block(deadblock, numc, ROB[numc].tail, CYCLE_VAL);
@@ -611,7 +626,7 @@ int main(int argc, char *argv[]) {
                                         dirty_deadblock_invalidation++;
                                     } else {
                                         clean_dead_block_invalidation++;
-                                    }
+                                    } */
                                     llc_available_cycle[banknum] = CYCLE_VAL + L3_LATENCY_WRITE_SLOW;
 
                                 } else if (L3Hit == 0) {
@@ -837,26 +852,28 @@ int main(int argc, char *argv[]) {
     printf("LLC_READ_ACCESS： %lld\n", llc_read_access);
     printf("LLC_WRITE_ACCESS： %lld\n", llc_write_access);
 
-    printf("LLC_FAST_WRITE： %lld\n", fast_write);
-    printf("LLC_SLOW_WRITE： %lld\n", slow_write);
-    printf("LLC_FAST_WRITE_PERCENTAGE： %.2f\n", (double)fast_write/((double)fast_write+(double)slow_write) );
-    printf("LLC_SLOW_WRITE_PERCENTAGE： %.2f\n", (double)slow_write/((double)fast_write+(double)slow_write));
+    printf("LLC_FAST_WRITE\t : %lld\n", fast_write);
+    printf("LLC_SLOW_WRITE\t : %lld\n", slow_write);
+    printf("LLC_FAST_WRITE_PERCENTAGE \t : %.2f\n", (double)fast_write/((double)fast_write+(double)slow_write) );
+    printf("LLC_SLOW_WRITE_PERCENTAGE \t : %.2f\n", (double)slow_write/((double)fast_write+(double)slow_write));
 
-    printf("LLC_FILL_INVALIDATION： %lld\n", fill_invalidation);
-    printf("LLC_WRITE_HIT_BACK_INVALIDATION： %lld\n", write_back_hit_invalidation);
-    printf("LLC_FILL_INVALIDATION_PERCENTAGE： %.2f\n", (double)fill_invalidation/((double)fill_invalidation+(double)write_back_hit_invalidation));
-    printf("LLC_WRITE_BACK_HIT_INVALIDATION_PERCENTAGE： %.2f\n", (double)write_back_hit_invalidation/((double)fill_invalidation+(double)write_back_hit_invalidation));
+    printf("LLC_FILL_TO_VALID_BLOCK\t : %lld\n", fill_invalidation);
+    printf("LLC_FILL_TO_INVALID_BLOCK\t : %lld\n", fill_in_invalided_block);
+    printf("LLC_WRITE_BACK_HIT_INVALIDATION\t : %lld\n", write_back_hit_invalidation);
+    printf("LLC_FILL_INVALIDATION_PERCENTAGE \t : %.2f\n", (double)fill_invalidation/((double)fill_invalidation+(double)write_back_hit_invalidation));
+    printf("LLC_WRITE_BACK_HIT_INVALIDATION_PERCENTAGE \t : %.2f\n", (double)write_back_hit_invalidation/((double)fill_invalidation+(double)write_back_hit_invalidation));
 
-    printf("DIRTY_DEADBLOCK_INVALIDATION： %lld\n", dirty_deadblock_invalidation);
-    printf("CLEAN_DEADBLOCK_INVALIDATION： %lld\n", clean_dead_block_invalidation);
-    printf("DIRTY_DEADBLOCK_INVALIDATION_PERCENTAGE： %.2f\n", (double)dirty_deadblock_invalidation/((double)dirty_deadblock_invalidation+(double)clean_dead_block_invalidation));
-    printf("CLEAN_DEADBLOCK_INVALIDATION_PERCENTAGE： %.2f\n", (double)clean_dead_block_invalidation/((double)dirty_deadblock_invalidation+(double)clean_dead_block_invalidation));
+    printf("DIRTY_DEADBLOCK_INVALIDATION\t : %lld\n", dirty_deadblock_invalidation);
+    printf("CLEAN_DEADBLOCK_INVALIDATION\t : %lld\n", clean_dead_block_invalidation);
+    printf("DIRTY_DEADBLOCK_INVALIDATION_PERCENTAGE \t : %.2f\n", (double)dirty_deadblock_invalidation/((double)dirty_deadblock_invalidation+(double)clean_dead_block_invalidation));
+    printf("CLEAN_DEADBLOCK_INVALIDATION_PERCENTAGE \t : %.2f\n", (double)clean_dead_block_invalidation/((double)dirty_deadblock_invalidation+(double)clean_dead_block_invalidation));
 
-    printf("DIRTY_DEADBLOCK_WRITE_BACK： %lld\n", dirty_deadblock_write_back);
-    printf("DIRTY_VICTIM_WRITE_BACK： %lld\n", dirty_victim_write_back);
-    printf("DIRTY_DEADBLOCK_WRITE_BACK_PERCENTAGE： %.2f\n", (double)dirty_deadblock_write_back/((double)dirty_deadblock_write_back+(double)dirty_victim_write_back));
-    printf("DIRTY_VICTIM_WRITE_BACK_PERCENTAGE： %.2f\n", (double)dirty_victim_write_back/((double)dirty_deadblock_write_back+(double)dirty_victim_write_back));
+    printf("DIRTY_DEADBLOCK_WRITE_BACK\t : %lld\n", dirty_deadblock_write_back);
+    printf("DIRTY_VICTIM_WRITE_BACK\t : %lld\n", dirty_victim_write_back);
+    printf("DIRTY_DEADBLOCK_WRITE_BACK_PERCENTAGE \t : %.2f\n", (double)dirty_deadblock_write_back/((double)dirty_deadblock_write_back+(double)dirty_victim_write_back));
+    printf("DIRTY_VICTIM_WRITE_BACK_PERCENTAGE \t : %.2f\n", (double)dirty_victim_write_back/((double)dirty_deadblock_write_back+(double)dirty_victim_write_back));
 
+    printf("PERCENTAGE_OF_FILL_IN_PREINVALIDED_BLOCK \t : %.2f\n", (double)fill_in_invalided_block/((double)fill_invalidation+(double)write_back_hit_invalidation));
 
     //check_table();
     printf("PP_CHANGE %lld\t%lld\n", pp_changed, pp_unchanged);

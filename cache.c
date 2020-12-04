@@ -10,7 +10,6 @@
 #include "stdio.h"
 #include <string.h>
 
-
 void init_cache(MCache* c, uns sets, uns assocs, uns repl_policy, uns linesize)
 {
     c->sets    = sets;
@@ -239,11 +238,11 @@ MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty)
 
     // find victim and install entry
     victim = mcache_find_victim(c, set);
+
     entry = &c->entries[victim];
     evicted_entry =c->entries[victim];
     if(entry->valid){
         c->s_evict++;
-
         if(entry->dirty)
             c->s_writeback++;
     }
@@ -401,7 +400,7 @@ uns mcache_find_victim_lru (MCache *c,  uns set)
     uns end   = start + c->assocs;
     uns lowest=start;
     uns ii;
-
+    
 
     for (ii = start; ii < end; ii++){
         if (c->entries[ii].last_access < c->entries[lowest].last_access){
@@ -420,32 +419,25 @@ MCache_Entry find_and_invalid_a_dead_block(MCache *c, Addr addr )
     uns     set    = mcache_get_index(c,tag);
     uns     start  = set   * c->assocs;
     uns     end    = start + c->assocs;
-    uns     lowest = start;
     uns64   lowest_last_access = -1;
     uns     ii;
-    uns     deadblock_idx;
-    uns     victim_idx;
+    uns     deadblock_idx=start;
     Flag    found = 0;
     MCache_Entry deadblock;
 
     for (ii=start; ii<end; ii++){
-        MCache_Entry *entry = &c->entries[ii];
         if ( !c->entries[ii].valid ){
-            found = 1;
-            victim_idx = ii;
-            deadblock_idx = victim_idx;
+            deadblock_idx = ii;
         }
     }
 
     if( !found ) {
         //select LRU victim block as dead block
-        uns64 lowest_last_access = -1;
+        lowest_last_access = -1;
         for (ii = start; ii < end; ii++) {
             if (c->entries[ii].last_access < lowest_last_access) {
                 //select the lru block
-                lowest = ii;
-                victim_idx = ii;
-                deadblock_idx = victim_idx;
+                deadblock_idx = ii;
 
                 lowest_last_access = c->entries[ii].last_access;
             }
