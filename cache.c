@@ -9,6 +9,7 @@
 #include "assert.h"
 #include "stdio.h"
 #include <string.h>
+#include <immintrin.h>
 
 //#define DEBUG_CACHEDATA 1
 void init_cache(MCache* c, uns sets, uns assocs, uns repl_policy, uns linesize)
@@ -262,16 +263,39 @@ MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty, char* dat
     //put new information in
     entry->tag   = tag;
     entry->valid = TRUE;
-    entry->dead  = 0;
-    entry->pc    = pc;
+    entry->dead = 0;
+    entry->pc = pc;
     entry->address = addr;
-    entry->access_count =0;
-    if(datasize!=64)
-    {
-        fprintf(stderr,"block size should be 64\n");
+    entry->access_count = 0;
+    if (datasize != 64) {
+        fprintf(stderr, "block size should be 64\n");
         exit(-1);
     }
-    memcpy(entry->data,data,datasize);
+
+    uns64 *current_data;
+    uns64 *new_data;
+
+    current_data = (uns64*)&entry->data;
+    new_data = (uns64*)&data;
+
+    for (uns8 i = datasize - 1; i >= 0; i--) {
+        uns8 sr_tmp_current = (*current_data >> i) & 1;
+        uns8 sr_tmp_new = (*new_data >> i) & 1;
+
+        if (sr_tmp_current != sr_tmp_new) {
+            c->flip_cnt++;
+
+            if (sr_tmp_current == 1) {
+                c->p_ap_trs++;
+            } else {
+                c->ap_p_trs++;
+            }
+        } else if (sr_tmp_current == 0 && sr_tmp_new == 0) {
+            c->p_p_trs++;
+        }
+    }
+
+    memcpy(entry->data, data, datasize);
 
 #ifdef DEBUG_CACHEDATA
     for(int i=0; i<16;i++)
@@ -443,6 +467,7 @@ MCache_Entry find_and_invalid_a_dead_block(MCache *c, Addr addr )
     for (ii=start; ii<end; ii++){
         if ( !c->entries[ii].valid ){
             deadblock_idx = ii;
+            found = 1;
         }
     }
 

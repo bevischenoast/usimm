@@ -42,7 +42,6 @@ typedef struct MCache_Entry {
     uns64 access_count;
     uns64 rd_count;
     uns64 wr_count;
-    uns comp_size;
     char data[64];
 
 } MCache_Entry;
@@ -79,6 +78,11 @@ typedef struct MCache {
 
     uns64 s_read;
     uns64 s_write;
+
+    uns64 flip_cnt;
+    uns64 p_ap_trs;
+    uns64 ap_p_trs;
+    uns64 p_p_trs;
 
     uns64 s_sblock_cnt[5]; //1: 1 subblock, 1: 2 subblock, 2: 3 subblock, 3: 4 subblock
     uns64 s_sblock_called;

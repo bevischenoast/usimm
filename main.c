@@ -38,6 +38,8 @@ long long int dirty_deadblock_invalidation = 0,  clean_dead_block_invalidation =
 long long int dirty_victim_write_back = 0;
 long long int fill_in_invalided_block = 0;
 //////////////////////////////////////////
+
+//////////////////////////////////////////
 long long int llc_write_access = 0;
 long long int pp_changed = 0;
 long long int pp_unchanged = 0;
