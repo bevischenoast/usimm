@@ -11,6 +11,7 @@
 #include <string.h>
 #include <immintrin.h>
 
+
 //#define DEBUG_CACHEDATA 1
 void init_cache(MCache* c, uns sets, uns assocs, uns repl_policy, uns linesize)
 {
@@ -224,6 +225,7 @@ MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty, char* dat
     uns   start = set * c->assocs;
     uns   end   = start + c->assocs;
     uns   ii, victim;
+    uns8  isDirty;
 
     Flag update_lrubits=TRUE;
 
@@ -245,8 +247,12 @@ MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty, char* dat
     evicted_entry =c->entries[victim];
     if(entry->valid){
         c->s_evict++;
-        if(entry->dirty)
+        if(entry->dirty) {
             c->s_writeback++;
+            isDirty = 1;
+        } else{
+            isDirty = 0;
+        }
     }
 
     //udpate DRRIP info and select value of ripctr
@@ -282,16 +288,31 @@ MCache_Entry mcache_install(MCache *c, Addr addr, Addr pc, Flag dirty, char* dat
         uns8 sr_tmp_current = (*current_data >> i) & 1;
         uns8 sr_tmp_new = (*new_data >> i) & 1;
 
-        if (sr_tmp_current != sr_tmp_new) {
-            c->flip_cnt++;
+        if(PI_ENABLED){
+            if (sr_tmp_current != sr_tmp_new) {
+                c->flip_cnt++;
 
-            if (sr_tmp_current == 1) {
-                c->p_ap_trs++;
-            } else {
-                c->ap_p_trs++;
+                if (sr_tmp_current == 1) {
+                    c->p_ap_trs++;
+                } else {
+                    c->ap_p_trs++;
+                }
+
+            } else if (sr_tmp_current == 0 && sr_tmp_new == 0) {
+                c->ap_ap_trs++;
             }
-        } else if (sr_tmp_current == 0 && sr_tmp_new == 0) {
-            c->p_p_trs++;
+
+
+        }else {
+            if (sr_tmp_current != sr_tmp_new) {
+                c->flip_cnt++;
+
+                if (sr_tmp_current == 1) {
+                    c->p_ap_trs++;
+                } else {
+                    c->ap_p_trs++;
+                }
+            }
         }
     }
 
@@ -597,5 +618,21 @@ void print_cache_stats(MCache * llcache){
         printf("Overall_Misses :   %lld\n", totMisses);
         printf("Overall_Hits :     %lld\n", totHits);
         printf("Overall_MissRate \t : %5f\n\n", ((double)totMisses/(double)totLookups)*100.0);
+
+        printf("Overall_P_to_AP_TRANSITIONS \t : %lld\n\n", p_ap_trs);
+        printf("Overall_P_to_AP_TRANSITIONS_POWER \t : %2f\n\n", (double)p_ap_trs*P_to_AP_POWER);
+
+        printf("Overall_AP_to_P_TRANSITIONS \t : %lld\n\n", ap_p_trs);
+        printf("Overall_AP_to_P_TRANSITIONS_POWER \t : %2f\n\n", (double)ap_p_trs*AP_to_P_POWER);
+
+        printf("Overall_P_to_P_TRANSITIONS \t : %lld\n\n", p_p_trs);
+        printf("Overall_P_to_P_TRANSITIONS_POWER \t : %2f\n\n", (double)p_p_trs*P_to_P_POWER);
+
+        printf("Overall_AP_to_AP_TRANSITIONS \t : %lld\n\n", ap_ap_trs);
+        printf("Overall_AP_to_AP_TRANSITIONS_POWER \t : %2f\n\n", (double)ap_ap_trs*AP_to_AP_POWER);
+
+        printf("Overall_POWER \t : %2f\n\n", (double)p_ap_trs*P_to_AP_POWER + (double)ap_p_trs*AP_to_P_POWER +
+                                             (double)p_p_trs*P_to_P_POWER + (double)ap_ap_trs*AP_to_AP_POWER);
+
     }
 }

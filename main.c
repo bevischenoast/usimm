@@ -63,7 +63,7 @@ unsigned long long int write_traffic = 0;
 unsigned long long int write_traffic_dirty = 0;
 unsigned long long int write_traffic_clean = 0;
 
-
++≠
 typedef struct node {
     // element data;
     struct node *left_link;

@@ -18,6 +18,11 @@ int L3_LATENCY_WRITE_SLOW;
 int PI_ENABLED;
 int IDEAL_MODE;
 
+double P_to_AP_POWER;
+double AP_to_P_POWER;
+double AP_to_AP_POWER;
+double P_to_P_POWER;
+
 // number of cores in mulicore
 int NUMCORES;
 

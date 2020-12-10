@@ -10,6 +10,11 @@
 #define		TAB	9
 
 typedef enum {
+
+    p_to_ap_power_token,
+    ap_to_p_power_token,
+    ap_to_ap_power_token,
+    p_to_p_power_token,
     processor_clk_multiplier_token,
     robsize_token,
     max_retire_token,
@@ -210,6 +215,14 @@ token_t tokenize(char * input){
         return pi_enabled_token;
     }else if (strncmp(input,"IDEAL_MODE",length)==0){
         return ideal_mode_token;
+    }else if (strncmp(input,"P_to_AP_POWER",length)==0){
+        return p_to_ap_power_token;
+    }else if (strncmp(input,"AP_to_P_POWER",length)==0){
+        return ap_to_p_power_token;
+    }else if (strncmp(input,"AP_to_AP_POWER",length)==0){
+        return ap_to_ap_power_token;
+    }else if (strncmp(input,"P_to_P_POWER",length)==0){
+        return p_to_p_power_token;
     }
     else {
         printf("PANIC :Unknown token %s\n",input);
@@ -524,6 +537,26 @@ void read_config_file(FILE * fin)
 	    case ideal_mode_token:
                 fscanf(fin,"%d",&input_int);
                 IDEAL_MODE = input_int;
+                break;
+
+            case p_to_ap_power_token:
+                fscanf(fin,"%d",&input_int);
+                P_to_AP_POWER =  input_int;
+                break;
+
+            case ap_to_p_power_token:
+                fscanf(fin,"%d",&input_int);
+                AP_to_P_POWER =  input_int;
+                break;
+
+            case ap_to_ap_power_token:
+                fscanf(fin,"%d",&input_int);
+                AP_to_AP_POWER =  input_int;
+                break;
+
+            case p_to_p_power_token:
+                fscanf(fin,"%d",&input_int);
+                P_to_P_POWER =  input_int;
                 break;
 
 
